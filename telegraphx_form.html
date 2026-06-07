@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>استمارة التقديم — TelegraphX</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E8191A;
+    --red-dark: #C21112;
+    --red-bg: #FFF0F0;
+    --gray-100: #F4F4F4;
+    --gray-200: #E8E8E8;
+    --gray-400: #888;
+    --gray-700: #333;
+    --green: #16A34A;
+    --green-bg: #F0FDF4;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Cairo', sans-serif; background: #f0f0f0; color: var(--gray-700); }
+
+  /* HEADER */
+  .header {
+    background: var(--red);
+    color: white;
+    text-align: center;
+    padding: 28px 20px 24px;
+  }
+  .header-logo { font-size: 28px; font-weight: 900; letter-spacing: -0.5px; }
+  .header-sub { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+
+  /* STEPS */
+  .steps {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    background: white;
+    border-bottom: 1px solid var(--gray-200);
+    overflow-x: auto;
+    padding: 0 16px;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-400);
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    cursor: default;
+  }
+  .step.active { color: var(--red); border-bottom-color: var(--red); }
+  .step.done { color: var(--green); border-bottom-color: var(--green); }
+  .step-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .step.active .step-num { background: var(--red); color: white; }
+  .step.done .step-num { background: var(--green); color: white; }
+
+  /* FORM */
+  .container { max-width: 680px; margin: 0 auto; padding: 20px 16px 40px; }
+  .section-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 1px solid var(--gray-200);
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #FFF0F0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-size: 12px; font-weight: 700; color: var(--gray-700); }
+  .form-label .req { color: var(--red); }
+  .form-input {
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
+    color: var(--gray-700);
+    outline: none;
+    transition: border 0.15s;
+    background: white;
+    width: 100%;
+  }
+  .form-input:focus { border-color: var(--red); }
+  .form-input.error { border-color: var(--red); background: var(--red-bg); }
+  select.form-input { cursor: pointer; }
+  textarea.form-input { resize: vertical; min-height: 80px; }
+
+  /* RADIO GROUP */
+  .radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .radio-opt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--gray-200);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .radio-opt input { display: none; }
+  .radio-opt.selected { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+
+  /* PAGE STEPS */
+  .form-page { display: none; }
+  .form-page.active { display: block; }
+
+  /* NAVIGATION */
+  .nav-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .btn {
+    flex: 1;
+    padding: 13px;
+    border-radius: var(--radius-sm);
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--red); color: white; }
+  .btn-primary:hover { background: var(--red-dark); }
+  .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+  .btn-outline { background: white; color: var(--gray-700); border: 1.5px solid var(--gray-200); }
+
+  /* SUCCESS */
+  .success-page {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+    background: white;
+    border-radius: var(--radius);
+  }
+  .success-icon { font-size: 64px; margin-bottom: 16px; }
+  .success-title { font-size: 22px; font-weight: 900; color: var(--green); margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: var(--gray-400); line-height: 1.8; }
+  .success-code {
+    margin: 20px auto;
+    background: var(--gray-100);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--gray-700);
+    max-width: 300px;
+  }
+  .success-code strong { color: var(--red); font-size: 18px; display: block; margin-top: 4px; }
+
+  /* PROGRESS BAR */
+  .progress-wrap { background: var(--gray-200); height: 4px; border-radius: 2px; margin-bottom: 20px; }
+  .progress-fill { height: 100%; background: var(--red); border-radius: 2px; transition: width 0.3s; }
+
+  @media (max-width: 480px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .step span { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">📦 TelegraphX — تليجراف</div>
+  <div class="header-sub">استمارة التقديم لوظيفة مندوب توصيل</div>
+</div>
+
+<div class="steps" id="stepsBar">
+  <div class="step active" id="step-1"><div class="step-num">1</div><span>البيانات الشخصية</span></div>
+  <div class="step" id="step-2"><div class="step-num">2</div><span>بيانات السكن</span></div>
+  <div class="step" id="step-3"><div class="step-num">3</div><span>المركبة والرخصة</span></div>
+  <div class="step" id="step-4"><div class="step-num">4</div><span>الخبرة والزونات</span></div>
+  <div class="step" id="step-5"><div class="step-num">5</div><span>التواصل</span></div>
+</div>
+
+<div class="container">
+  <div class="progress-wrap"><div class="progress-fill" id="progressFill" style="width:20%"></div></div>
+
+  <!-- PAGE 1: البيانات الشخصية -->
+  <div class="form-page active" id="page-1">
+    <div class="section-card">
+      <div class="section-title">👤 البيانات الشخصية</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">الاسم بالكامل رباعياً <span class="req">*</span></label>
+          <input class="form-input" id="f_name" type="text" placeholder="الاسم الأول / الثاني / الثالث / الأخير">
+        </div>
+        <div class="form-group">
+          <label class="form-label">الرقم القومي <span class="req">*</span></label>
+          <input class="form-input" id="f_natid" type="text" placeholder="14 رقم" maxlength="14">
+        </div>
+        <div class="form-group">
+          <label class="form-label">رقم المحمول الأساسي <span class="req">*</span></label>
+          <input class="form-input" id="f_phone1" type="tel" placeholder="01X XXXX XXXX">
+        </div>
+        <div class="form-group">
+          <label class="form-label">رقم محمول ثاني</label>
+          <input class="form-input" id="f_phone2" type="tel" placeholder="01X XXXX XXXX">
+        </div>
+        <div class="form-group">
+          <label class="form-label">نوع الهاتف</label>
+          <select class="form-input" id="f_phonetype">
+            <option value="">-- اختار --</option>
+            <option>Android</option>
+            <option>iPhone</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الحالة الاجتماعية <span class="req">*</span></label>
+          <select class="form-input" id="f_marital">
+            <option value="">-- اختار --</option>
+            <option>أعزب</option>
+            <option>متزوج</option>
+            <option>مطلق</option>
+            <option>أرمل</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الموقف من التجنيد <span class="req">*</span></label>
+          <select class="form-input" id="f_military">
+            <option value="">-- اختار --</option>
+            <option>أدى الخدمة</option>
+            <option>معاف</option>
+            <option>تحت سن التجنيد</option>
+            <option>مؤجل</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">آخر مؤهل علمي</label>
+          <select class="form-input" id="f_education">
+            <option value="">-- اختار --</option>
+            <option>أقل من الثانوية</option>
+            <option>دبلوم فني صناعي</option>
+            <option>دبلوم تجارة</option>
+            <option>ثانوية عامة</option>
+            <option>معهد</option>
+            <option>بكالوريوس</option>
+            <option>أخرى</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-primary" onclick="nextPage(1)">التالي ←</button>
+    </div>
+  </div>
+
+  <!-- PAGE 2: بيانات السكن -->
+  <div class="form-page" id="page-2">
+    <div class="section-card">
+      <div class="section-title">🏠 بيانات السكن</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">عنوان البطاقة <span class="req">*</span></label>
+          <input class="form-input" id="f_cardaddr" type="text" placeholder="العنوان كما هو في البطاقة">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">العنوان الحالي <span class="req">*</span></label>
+          <input class="form-input" id="f_currentaddr" type="text" placeholder="الشارع / الحي / المدينة">
+        </div>
+        <div class="form-group">
+          <label class="form-label">منطقة السكن الحالي</label>
+          <input class="form-input" id="f_area" type="text" placeholder="مثال: سيدي بشر، المعادي...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">الدور</label>
+          <input class="form-input" id="f_floor" type="text" placeholder="رقم الدور">
+        </div>
+        <div class="form-group">
+          <label class="form-label">رقم الشقة</label>
+          <input class="form-input" id="f_apt" type="text" placeholder="رقم الشقة">
+        </div>
+        <div class="form-group">
+          <label class="form-label">علامة مميزة</label>
+          <input class="form-input" id="f_landmark" type="text" placeholder="مثال: بجانب مسجد...">
+        </div>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="prevPage(2)">→ السابق</button>
+      <button class="btn btn-primary" onclick="nextPage(2)">التالي ←</button>
+    </div>
+  </div>
+
+  <!-- PAGE 3: المركبة والرخصة -->
+  <div class="form-page" id="page-3">
+    <div class="section-card">
+      <div class="section-title">🛵 المركبة والرخصة</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">تفاصيل المركبة <span class="req">*</span></label>
+          <div class="radio-group" id="rg_vehicle">
+            <label class="radio-opt" onclick="selectRadio(this,'rg_vehicle')"><input type="radio" name="vehicle" value="موتوسيكل">🏍️ موتوسيكل</label>
+            <label class="radio-opt" onclick="selectRadio(this,'rg_vehicle')"><input type="radio" name="vehicle" value="سكوتر">🛵 سكوتر</label>
+            <label class="radio-opt" onclick="selectRadio(this,'rg_vehicle')"><input type="radio" name="vehicle" value="مترجل">🚶 مترجل</label>
+            <label class="radio-opt" onclick="selectRadio(this,'rg_vehicle')"><input type="radio" name="vehicle" value="عربية">🚗 عربية</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">هل لديك رخصة قيادة؟ <span class="req">*</span></label>
+          <div class="radio-group" id="rg_license">
+            <label class="radio-opt" onclick="selectRadio(this,'rg_license')"><input type="radio" name="license" value="نعم">✅ نعم</label>
+            <label class="radio-opt" onclick="selectRadio(this,'rg_license')"><input type="radio" name="license" value="لا">❌ لا</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">هل لديك رخصة المركبة؟</label>
+          <div class="radio-group" id="rg_vehiclelicense">
+            <label class="radio-opt" onclick="selectRadio(this,'rg_vehiclelicense')"><input type="radio" name="vehiclelicense" value="نعم">✅ نعم</label>
+            <label class="radio-opt" onclick="selectRadio(this,'rg_vehiclelicense')"><input type="radio" name="vehiclelicense" value="لا">❌ لا</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="prevPage(3)">→ السابق</button>
+      <button class="btn btn-primary" onclick="nextPage(3)">التالي ←</button>
+    </div>
+  </div>
+
+  <!-- PAGE 4: الخبرة والزونات -->
+  <div class="form-page" id="page-4">
+    <div class="section-card">
+      <div class="section-title">💼 الخبرة والزونات</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">اشتغلت فين قبل كده؟</label>
+          <textarea class="form-input" id="f_experience" placeholder="اذكر أماكن العمل السابقة..."></textarea>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">الزونات الأساسية التي تجيدها <span class="req">*</span></label>
+          <input class="form-input" id="f_zones1" type="text" placeholder="مثال: سيدي بشر، المنتزه، الشاطبي...">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">الزونات الثانوية</label>
+          <input class="form-input" id="f_zones2" type="text" placeholder="مناطق تانية تعرفها">
+        </div>
+        <div class="form-group">
+          <label class="form-label">هل سبق لك العمل في تليجراف؟</label>
+          <div class="radio-group" id="rg_prev">
+            <label class="radio-opt" onclick="selectRadio(this,'rg_prev')"><input type="radio" name="prev" value="نعم">نعم</label>
+            <label class="radio-opt" onclick="selectRadio(this,'rg_prev')"><input type="radio" name="prev" value="لا">لا</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">هل لديك أقارب في تليجراف؟</label>
+          <div class="radio-group" id="rg_relatives">
+            <label class="radio-opt" onclick="selectRadio(this,'rg_relatives')"><input type="radio" name="relatives" value="نعم">نعم</label>
+            <label class="radio-opt" onclick="selectRadio(this,'rg_relatives')"><input type="radio" name="relatives" value="لا">لا</label>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">من خلال أي وسيلة تعرفت على الشركة؟</label>
+          <select class="form-input" id="f_source">
+            <option value="">-- اختار --</option>
+            <option>إعلان فيس بوك</option>
+            <option>ترشيح من صديق</option>
+            <option>ترشيح من والدي</option>
+            <option>إعلان واتساب</option>
+            <option>أخرى</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="prevPage(4)">→ السابق</button>
+      <button class="btn btn-primary" onclick="nextPage(4)">التالي ←</button>
+    </div>
+  </div>
+
+  <!-- PAGE 5: التواصل والطوارئ -->
+  <div class="form-page" id="page-5">
+    <div class="section-card">
+      <div class="section-title">📞 بيانات التواصل والطوارئ</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">رقم الطوارئ <span class="req">*</span></label>
+          <input class="form-input" id="f_emergency" type="tel" placeholder="01X XXXX XXXX">
+        </div>
+        <div class="form-group">
+          <label class="form-label">درجة القرابة <span class="req">*</span></label>
+          <select class="form-input" id="f_relation">
+            <option value="">-- اختار --</option>
+            <option>الأب</option>
+            <option>الأم</option>
+            <option>الأخ</option>
+            <option>الأخت</option>
+            <option>الزوجة</option>
+            <option>أخرى</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">رقم المسؤول الذي تواصل معك</label>
+          <input class="form-input" id="f_recruiter" type="tel" placeholder="رقم المسؤول">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" style="background:#FFF7ED;border-color:#FDE68A">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="font-size:20px">⚠️</div>
+        <div style="font-size:12px;color:#92400E;line-height:1.7">
+          بتقديم هذه الاستمارة، أنت توافق على أن البيانات المقدمة صحيحة وأن شركة TelegraphX تليجراف لها الحق في التحقق منها.
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="prevPage(5)">→ السابق</button>
+      <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">✅ إرسال الاستمارة</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-page" id="successPage">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">تم إرسال الاستمارة بنجاح!</div>
+    <div class="success-sub">شكراً لتقديمك لوظيفة مندوب في TelegraphX<br>سيتم التواصل معك قريباً</div>
+    <div class="success-code">
+      رقم الطلب
+      <strong id="appCode">--</strong>
+    </div>
+    <div style="font-size:12px;color:var(--gray-400);margin-top:8px">احتفظ برقم الطلب للمتابعة</div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyBDjS7aR-rclgwaHij6vOULWYHpk60Rh8U",
+  authDomain: "telegraph-70db4.firebaseapp.com",
+  projectId: "telegraph-70db4",
+  storageBucket: "telegraph-70db4.firebasestorage.app",
+  messagingSenderId: "352180136479",
+  appId: "1:352180136479:web:b12f4ac45269f013f2c32a"
+});
+const db = getFirestore(app);
+
+let currentPage = 1;
+const totalPages = 5;
+
+window.selectRadio = function(label, groupId) {
+  document.querySelectorAll(`#${groupId} .radio-opt`).forEach(l => l.classList.remove('selected'));
+  label.classList.add('selected');
+};
+
+function getRadioVal(groupId) {
+  const sel = document.querySelector(`#${groupId} .radio-opt.selected input`);
+  return sel ? sel.value : '';
+}
+
+function val(id) { return document.getElementById(id)?.value?.trim() || ''; }
+
+window.nextPage = function(from) {
+  // Validate
+  if(from === 1) {
+    if(!val('f_name') || !val('f_natid') || !val('f_phone1') || !val('f_marital') || !val('f_military')) {
+      alert('من فضلك اكمل الحقول المطلوبة (*)'); return;
+    }
+  }
+  if(from === 2) {
+    if(!val('f_cardaddr') || !val('f_currentaddr')) {
+      alert('من فضلك اكمل العنوان'); return;
+    }
+  }
+  if(from === 4) {
+    if(!val('f_zones1')) {
+      alert('من فضلك اكتب الزونات الأساسية'); return;
+    }
+  }
+  goToPage(from + 1);
+};
+
+window.prevPage = function(from) { goToPage(from - 1); };
+
+function goToPage(page) {
+  document.getElementById('page-' + currentPage).classList.remove('active');
+  document.getElementById('step-' + currentPage).classList.remove('active');
+  document.getElementById('step-' + currentPage).classList.add('done');
+  currentPage = page;
+  document.getElementById('page-' + currentPage).classList.add('active');
+  document.getElementById('step-' + currentPage).classList.remove('done');
+  document.getElementById('step-' + currentPage).classList.add('active');
+  document.getElementById('progressFill').style.width = (currentPage / totalPages * 100) + '%';
+  window.scrollTo(0, 0);
+}
+
+window.submitForm = async function() {
+  if(!val('f_emergency') || !val('f_relation')) {
+    alert('من فضلك اكمل بيانات الطوارئ'); return;
+  }
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'جاري الإرسال...';
+
+  const appCode = 'TG' + Date.now().toString().slice(-7);
+
+  try {
+    await addDoc(collection(db, 'applicants'), {
+      appCode,
+      name: val('f_name'),
+      natId: val('f_natid'),
+      phone1: val('f_phone1'),
+      phone2: val('f_phone2'),
+      phoneType: val('f_phonetype'),
+      marital: val('f_marital'),
+      military: val('f_military'),
+      education: val('f_education'),
+      cardAddress: val('f_cardaddr'),
+      currentAddress: val('f_currentaddr'),
+      area: val('f_area'),
+      floor: val('f_floor'),
+      apt: val('f_apt'),
+      landmark: val('f_landmark'),
+      vehicle: getRadioVal('rg_vehicle'),
+      hasLicense: getRadioVal('rg_license'),
+      hasVehicleLicense: getRadioVal('rg_vehiclelicense'),
+      experience: val('f_experience'),
+      zones1: val('f_zones1'),
+      zones2: val('f_zones2'),
+      workedBefore: getRadioVal('rg_prev'),
+      hasRelatives: getRadioVal('rg_relatives'),
+      source: val('f_source'),
+      emergency: val('f_emergency'),
+      relation: val('f_relation'),
+      recruiter: val('f_recruiter'),
+      stage: 'استمارة مقدمة',
+      status: 'جديد',
+      score: null,
+      interviewResult: null,
+      createdAt: serverTimestamp()
+    });
+
+    document.getElementById('page-5').classList.remove('active');
+    document.getElementById('successPage').style.display = 'block';
+    document.getElementById('appCode').textContent = appCode;
+    document.getElementById('progressFill').style.width = '100%';
+  } catch(e) {
+    alert('حدث خطأ: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '✅ إرسال الاستمارة';
+  }
+};
+</script>
+</body>
+</html>

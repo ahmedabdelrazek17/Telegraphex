@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>QR Code — استمارة TelegraphX</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Cairo', sans-serif; background: #f0f0f0; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+  .card { background: white; border-radius: 16px; padding: 32px; max-width: 420px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.1); text-align: center; }
+  .logo { font-size: 24px; font-weight: 900; color: #E8191A; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: #888; margin-bottom: 24px; }
+  #qrcode { display: flex; justify-content: center; margin: 20px 0; }
+  #qrcode canvas, #qrcode img { border-radius: 12px; border: 3px solid #E8191A; padding: 8px; }
+  .url-box { background: #f4f4f4; border-radius: 8px; padding: 10px 14px; font-size: 11px; color: #555; word-break: break-all; margin: 12px 0; direction: ltr; text-align: left; }
+  .btn { background: #E8191A; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 8px; }
+  .btn:hover { background: #C21112; }
+  .btn-outline { background: white; color: #333; border: 1.5px solid #ddd; margin-top: 8px; }
+  .steps { text-align: right; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+  .step-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13px; color: #555; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; background: #E8191A; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+  .print-info { background: #FFF0F0; border-radius: 8px; padding: 12px; margin: 16px 0; font-size: 12px; color: #666; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">📦 TelegraphX</div>
+  <div class="sub">QR Code — استمارة التقديم لوظيفة مندوب</div>
+
+  <div id="qrcode"></div>
+
+  <div class="url-box" id="formUrl">جاري التحميل...</div>
+
+  <div class="print-info">
+    🖨️ اطبع هذه الصفحة وضعها في الفرع<br>
+    المتقدم بيمسح الـ QR بالموبايل وبيملا الاستمارة على طول
+  </div>
+
+  <button class="btn" onclick="window.print()">🖨️ طباعة</button>
+  <button class="btn btn-outline" onclick="openForm()">🔗 فتح الاستمارة</button>
+
+  <div class="steps">
+    <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px">كيف تشتغل؟</div>
+    <div class="step-item"><div class="step-num">1</div>المتقدم بيمسح الـ QR Code بالموبايل</div>
+    <div class="step-item"><div class="step-num">2</div>بيفتح معاه الاستمارة ويملاها</div>
+    <div class="step-item"><div class="step-num">3</div>بياخد كود الطلب بتاعه</div>
+    <div class="step-item"><div class="step-num">4</div>بياناته بتظهر في النظام فوراً ✅</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const formUrl = 'https://ahmedabdelrazek17.github.io/Telegraphex/telegraphx_form.html';
+document.getElementById('formUrl').textContent = formUrl;
+
+new QRCode(document.getElementById('qrcode'), {
+  text: formUrl,
+  width: 220,
+  height: 220,
+  colorDark: '#E8191A',
+  colorLight: '#ffffff',
+  correctLevel: QRCode.CorrectLevel.H
+});
+
+window.openForm = function() { window.open(formUrl, '_blank'); };
+</script>
+</body>
+</html>
