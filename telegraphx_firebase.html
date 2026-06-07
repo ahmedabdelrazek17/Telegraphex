@@ -509,6 +509,20 @@
   </div>
 </div>
 
+<!-- App Detail Modal -->
+<div class="modal-overlay" id="modal-appDetail">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <div class="modal-title">بيانات المتقدم الكاملة</div>
+      <button class="btn btn-ghost" onclick="closeModal('appDetail')">✕</button>
+    </div>
+    <div id="appDetailContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('appDetail')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -941,6 +955,9 @@ function renderApplicants() {
             <div style="font-size:12px;font-weight:700">${a.workedBefore||'--'}</div>
           </div>
         </div>
+        <div style='display:flex;gap:8px;margin-top:12px'>
+          <button class='btn btn-outline btn-sm' onclick='viewApplicant("${a.id}")'>👁️ عرض الكل</button>
+        </div>
         ${a.status==='جديد'?`
         <div style="display:flex;gap:8px;margin-top:12px">
           <button class="btn btn-primary btn-sm" onclick="updateAppStatus('${a.id}','مقبول')">✅ قبول للإنترفيو</button>
@@ -954,6 +971,63 @@ window.updateAppStatus = async function(id, status) {
   await updateDoc(doc(db,'applicants',id), { status });
   showToast(status==='مقبول'?'✅ تم القبول للإنترفيو':'❌ تم الرفض', status==='مقبول'?'success':'');
   loadApplicants();
+};
+
+window.viewApplicant = function(id) {
+  const a = allApplicants.find(x=>x.id===id);
+  if(!a) return;
+  document.getElementById('appDetailContent').innerHTML = `
+    <div class="profile-header">
+      <div class="profile-avatar">${(a.name||'؟').substring(0,2)}</div>
+      <div style="flex:1">
+        <div class="profile-name">${a.name||'--'}</div>
+        <div class="profile-meta">${a.appCode||''} | ${a.phone1||''}</div>
+        <span class="profile-badge">${a.status||'جديد'}</span>
+      </div>
+    </div>
+    <div class="profile-body">
+      <div class="form-section" style="margin-top:0">البيانات الشخصية</div>
+      <div class="profile-grid">
+        <div class="info-item"><div class="info-item-label">الاسم الكامل</div><div class="info-item-value">${a.name||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">الرقم القومي</div><div class="info-item-value" style="direction:ltr">${a.natId||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">رقم المحمول الأساسي</div><div class="info-item-value">${a.phone1||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">رقم المحمول الثاني</div><div class="info-item-value">${a.phone2||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">نوع الهاتف</div><div class="info-item-value">${a.phoneType||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">الحالة الاجتماعية</div><div class="info-item-value">${a.marital||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">الموقف من التجنيد</div><div class="info-item-value">${a.military||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">آخر مؤهل علمي</div><div class="info-item-value">${a.education||'--'}</div></div>
+      </div>
+      <div class="form-section">بيانات السكن</div>
+      <div class="profile-grid">
+        <div class="info-item full" style="grid-column:1/-1"><div class="info-item-label">عنوان البطاقة</div><div class="info-item-value">${a.cardAddress||'--'}</div></div>
+        <div class="info-item full" style="grid-column:1/-1"><div class="info-item-label">العنوان الحالي</div><div class="info-item-value">${a.currentAddress||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">المنطقة</div><div class="info-item-value">${a.area||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">الدور / الشقة</div><div class="info-item-value">${a.floor||'--'} / ${a.apt||'--'}</div></div>
+        <div class="info-item full" style="grid-column:1/-1"><div class="info-item-label">علامة مميزة</div><div class="info-item-value">${a.landmark||'--'}</div></div>
+      </div>
+      <div class="form-section">المركبة والرخصة</div>
+      <div class="profile-grid">
+        <div class="info-item"><div class="info-item-label">المركبة</div><div class="info-item-value">${a.vehicle||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">رخصة قيادة</div><div class="info-item-value">${a.hasLicense||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">رخصة المركبة</div><div class="info-item-value">${a.hasVehicleLicense||'--'}</div></div>
+      </div>
+      <div class="form-section">الخبرة والزونات</div>
+      <div class="profile-grid">
+        <div class="info-item full" style="grid-column:1/-1"><div class="info-item-label">خبرة سابقة</div><div class="info-item-value">${a.experience||'--'}</div></div>
+        <div class="info-item full" style="grid-column:1/-1"><div class="info-item-label">الزونات الأساسية</div><div class="info-item-value">${a.zones1||'--'}</div></div>
+        <div class="info-item full" style="grid-column:1/-1"><div class="info-item-label">الزونات الثانوية</div><div class="info-item-value">${a.zones2||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">عمل في تليجراف قبل</div><div class="info-item-value">${a.workedBefore||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">أقارب في تليجراف</div><div class="info-item-value">${a.hasRelatives||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">مصدر التعرف</div><div class="info-item-value">${a.source||'--'}</div></div>
+      </div>
+      <div class="form-section">بيانات الطوارئ</div>
+      <div class="profile-grid">
+        <div class="info-item"><div class="info-item-label">رقم الطوارئ</div><div class="info-item-value">${a.emergency||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">درجة القرابة</div><div class="info-item-value">${a.relation||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">رقم المسؤول</div><div class="info-item-value">${a.recruiter||'--'}</div></div>
+      </div>
+    </div>`;
+  openModal('appDetail');
 };
 
 window.switchAppTab = function(btn, tab) {
