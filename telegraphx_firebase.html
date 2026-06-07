@@ -224,6 +224,8 @@
   <button class="nav-item" onclick="showPage('rating',this)">⭐ التقييم</button>
   <div class="sidebar-label">الطلبات</div>
   <button class="nav-item" onclick="showPage('requests',this)">📩 الطلبات <span class="nav-badge" id="reqBadge">0</span></button>
+  <div class="sidebar-label">التقديمات</div>
+  <button class="nav-item" onclick="showPage('applicants',this)">📝 استمارات التقديم <span class="nav-badge" id="appBadge">0</span></button>
 </div>
 
 <!-- MAIN -->
@@ -320,6 +322,21 @@
       <button class="tab" onclick="switchReqTab(this,'suggestion')">💡 اقتراحات</button>
     </div>
     <div id="requestsList"><div class="loading"><div class="spinner"></div>جاري التحميل...</div></div>
+  </div>
+
+  <!-- APPLICANTS -->
+  <div id="page-applicants" class="page">
+    <div class="page-header">
+      <div><div class="page-title">استمارات التقديم</div><div class="page-sub">كل المتقدمين من الاستمارة الأونلاين</div></div>
+      <a href="https://ahmedabdelrazek17.github.io/Telegraphex/telegraphx_qr.html" target="_blank" class="btn btn-primary">📱 QR Code الاستمارة</a>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchAppTab(this,'all')">الكل</button>
+      <button class="tab" onclick="switchAppTab(this,'جديد')">🆕 جديد</button>
+      <button class="tab" onclick="switchAppTab(this,'مقبول')">✅ مقبول</button>
+      <button class="tab" onclick="switchAppTab(this,'مرفوض')">❌ مرفوض</button>
+    </div>
+    <div id="applicantsList"><div class="loading"><div class="spinner"></div>جاري التحميل...</div></div>
   </div>
 
 </div>
@@ -866,6 +883,86 @@ async function loadHiring() {
   }).join('');
 }
 
+
+// ===== APPLICANTS =====
+let allApplicants = [];
+let currentAppTab = 'all';
+
+async function loadApplicants() {
+  const snap = await getDocs(collection(db,'applicants'));
+  allApplicants = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const newCount = allApplicants.filter(a=>a.status==='جديد').length;
+  document.getElementById('appBadge').textContent = newCount;
+  renderApplicants();
+}
+
+function renderApplicants() {
+  const list = currentAppTab === 'all' ? allApplicants : allApplicants.filter(a=>a.status===currentAppTab);
+  const el = document.getElementById('applicantsList');
+  if(!list.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📝</div><div>لا يوجد تقديمات بعد</div></div>'; return; }
+  el.innerHTML = list.map(a=>`
+    <div class="card" style="margin-bottom:12px">
+      <div style="padding:16px 20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="courier-avatar" style="background:var(--blue)">${(a.name||'؟').substring(0,2)}</div>
+            <div>
+              <div style="font-weight:800;font-size:14px">${a.name||'--'}</div>
+              <div style="font-size:11px;color:var(--gray-400)">${a.appCode||''} | ${a.phone1||''}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="badge ${a.status==='مقبول'?'badge-green':a.status==='مرفوض'?'badge-red':'badge-amber'}">${a.status||'جديد'}</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px">
+          <div style="background:var(--gray-50);border-radius:6px;padding:8px;border:1px solid var(--gray-200)">
+            <div style="font-size:10px;color:var(--gray-400);font-weight:700">الرقم القومي</div>
+            <div style="font-size:12px;font-weight:700;direction:ltr">${a.natId||'--'}</div>
+          </div>
+          <div style="background:var(--gray-50);border-radius:6px;padding:8px;border:1px solid var(--gray-200)">
+            <div style="font-size:10px;color:var(--gray-400);font-weight:700">المنطقة</div>
+            <div style="font-size:12px;font-weight:700">${a.area||'--'}</div>
+          </div>
+          <div style="background:var(--gray-50);border-radius:6px;padding:8px;border:1px solid var(--gray-200)">
+            <div style="font-size:10px;color:var(--gray-400);font-weight:700">المركبة</div>
+            <div style="font-size:12px;font-weight:700">${a.vehicle||'--'}</div>
+          </div>
+          <div style="background:var(--gray-50);border-radius:6px;padding:8px;border:1px solid var(--gray-200)">
+            <div style="font-size:10px;color:var(--gray-400);font-weight:700">الزونات الأساسية</div>
+            <div style="font-size:12px;font-weight:700">${a.zones1||'--'}</div>
+          </div>
+          <div style="background:var(--gray-50);border-radius:6px;padding:8px;border:1px solid var(--gray-200)">
+            <div style="font-size:10px;color:var(--gray-400);font-weight:700">رخصة قيادة</div>
+            <div style="font-size:12px;font-weight:700">${a.hasLicense||'--'}</div>
+          </div>
+          <div style="background:var(--gray-50);border-radius:6px;padding:8px;border:1px solid var(--gray-200)">
+            <div style="font-size:10px;color:var(--gray-400);font-weight:700">عمل في تليجراف</div>
+            <div style="font-size:12px;font-weight:700">${a.workedBefore||'--'}</div>
+          </div>
+        </div>
+        ${a.status==='جديد'?`
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-primary btn-sm" onclick="updateAppStatus('${a.id}','مقبول')">✅ قبول للإنترفيو</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--red)" onclick="updateAppStatus('${a.id}','مرفوض')">❌ رفض</button>
+        </div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+window.updateAppStatus = async function(id, status) {
+  await updateDoc(doc(db,'applicants',id), { status });
+  showToast(status==='مقبول'?'✅ تم القبول للإنترفيو':'❌ تم الرفض', status==='مقبول'?'success':'');
+  loadApplicants();
+};
+
+window.switchAppTab = function(btn, tab) {
+  document.querySelectorAll('#page-applicants .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  currentAppTab = tab;
+  renderApplicants();
+};
+
 // ===== NAV =====
 window.showPage = function(page, btn) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -877,6 +974,7 @@ window.showPage = function(page, btn) {
   if(page==='rating') { loadRatings(); loadCouriers(); }
   if(page==='requests') { loadRequests(); loadCouriers(); }
   if(page==='hiring') loadHiring();
+  if(page==='applicants') loadApplicants();
 };
 
 window.openModal = function(id) { document.getElementById('modal-'+id).classList.add('open'); };
