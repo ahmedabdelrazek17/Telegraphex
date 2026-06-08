@@ -548,6 +548,28 @@
   </div>
 </div>
 
+<!-- Edit Branch Modal -->
+<div class="modal-overlay" id="modal-editBranch">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">تعديل بيانات الفرع</div><button class="btn btn-ghost" onclick="closeModal('editBranch')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">اسم الفرع (عربي)</label><input class="form-input" id="eb_nameAr" type="text"></div>
+        <div class="form-group"><label class="form-label">اسم الفرع (إنجليزي)</label><input class="form-input" id="eb_name" type="text"></div>
+        <div class="form-group"><label class="form-label">مدير الفرع</label><input class="form-input" id="eb_manager" type="text"></div>
+        <div class="form-group"><label class="form-label">رقم الموبايل</label><input class="form-input" id="eb_phone" type="text"></div>
+        <div class="form-group full"><label class="form-label">الإيميل</label><input class="form-input" id="eb_email" type="email"></div>
+        <div class="form-group full"><label class="form-label">العنوان</label><input class="form-input" id="eb_address" type="text"></div>
+        <div class="form-group full"><label class="form-label">لينك الخرايط</label><input class="form-input" id="eb_location" type="text" placeholder="https://maps.google.com/..."></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('editBranch')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveBranch()">💾 حفظ التعديلات</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -1085,10 +1107,43 @@ function loadBranches() {
         <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:#F0FDF4;display:flex;align-items:center;justify-content:center;flex-shrink:0">📱</div><div><div style="font-size:11px;color:var(--gray-400);font-weight:700">الموبايل</div><div style="font-weight:700;display:flex;align-items:center;gap:6px">${b.phone} <a href="https://wa.me/2${b.phone.replace(/^0/,'')}" target="_blank" style="background:#25D366;color:white;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none">💬</a></div></div></div>
         <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0">✉️</div><div><div style="font-size:11px;color:var(--gray-400);font-weight:700">الإيميل</div><div style="font-weight:700;font-size:12px">${b.email}</div></div></div>
         <div style="display:flex;align-items:flex-start;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:#FFFBEB;display:flex;align-items:center;justify-content:center;flex-shrink:0">📍</div><div><div style="font-size:11px;color:var(--gray-400);font-weight:700">العنوان</div><div style="font-weight:600;font-size:12px;line-height:1.6">${b.address}</div></div></div>
-        <a href="${b.location}" target="_blank" class="btn btn-outline" style="width:100%;justify-content:center;text-decoration:none">🗺️ فتح في الخرايط</a>
+        <a href="${b.location}" target="_blank" class="btn btn-outline" style="width:100%;justify-content:center;text-decoration:none;margin-bottom:8px">🗺️ فتح في الخرايط</a>
+        <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="editBranch(${i})">✏️ تعديل</button>
       </div>
     </div>`).join('');
 }
+
+// EDIT BRANCH
+let editingBranchIndex = -1;
+
+window.editBranch = function(index) {
+  editingBranchIndex = index;
+  const b = BRANCHES_DATA[index];
+  document.getElementById('eb_nameAr').value = b.nameAr;
+  document.getElementById('eb_name').value = b.name;
+  document.getElementById('eb_manager').value = b.manager;
+  document.getElementById('eb_phone').value = b.phone;
+  document.getElementById('eb_email').value = b.email;
+  document.getElementById('eb_address').value = b.address;
+  document.getElementById('eb_location').value = b.location;
+  openModal('editBranch');
+};
+
+window.saveBranch = function() {
+  if(editingBranchIndex < 0) return;
+  BRANCHES_DATA[editingBranchIndex] = {
+    nameAr: document.getElementById('eb_nameAr').value,
+    name: document.getElementById('eb_name').value,
+    manager: document.getElementById('eb_manager').value,
+    phone: document.getElementById('eb_phone').value,
+    email: document.getElementById('eb_email').value,
+    address: document.getElementById('eb_address').value,
+    location: document.getElementById('eb_location').value,
+  };
+  closeModal('editBranch');
+  loadBranches();
+  showToast('✅ تم تعديل بيانات الفرع', 'success');
+};
 
 // NAV
 window.showPage = function(page,btn) {
