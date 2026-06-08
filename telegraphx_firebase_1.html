@@ -1322,8 +1322,29 @@ document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('cli
 
 // ===== INIT =====
 document.getElementById('currentUserName').textContent = 'مدير النظام';
-loadDashboard();
-loadCouriers();
+
+// Load with timeout protection
+async function initApp() {
+  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000));
+  try {
+    await Promise.race([loadDashboard(), timeout]);
+  } catch(e) {
+    console.error('Dashboard load error:', e);
+    // Show empty state instead of endless loading
+    document.getElementById('statTotal').textContent = '0';
+    document.getElementById('statActive').textContent = '0';
+    document.getElementById('statPending').textContent = '0';
+    document.getElementById('statRating').textContent = '--';
+    document.getElementById('topCouriers').innerHTML = '<div class="empty"><div class="empty-icon">🛵</div><div>لا يوجد بيانات</div></div>';
+    document.getElementById('latestRequests').innerHTML = '<div class="empty"><div class="empty-icon">📩</div><div>لا يوجد طلبات</div></div>';
+    if(e.message === 'timeout') showToast('⚠️ مشكلة في الاتصال بـ Firebase', 'error');
+  }
+  try { await loadCouriers(); } catch(e) {
+    document.getElementById('couriersTable').innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-icon">🛵</div><div>تعذر تحميل البيانات</div></div></td></tr>';
+  }
+}
+
+initApp();
 </script>
 </body>
 </html>
