@@ -646,7 +646,7 @@ function renderCouriers(list) {
   if(!list.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-icon">🛵</div><div>لا يوجد مندوبين</div></div></td></tr>'; return; }
   tbody.innerHTML = list.map(c=>`
     <tr>
-      <td><div class="courier-info"><div class="courier-avatar">${getInitials(c.name)}</div><div><div style="font-weight:700;font-size:13px">${c.name}</div><div style="font-size:11px;color:var(--gray-400)">${c.phone||''}</div></div></div></td>
+      <td><div class="courier-info"><div class="courier-avatar">${getInitials(c.name)}</div><div><div style="font-weight:700;font-size:13px">${c.name}</div><div style="font-size:11px;color:var(--gray-400);display:flex;align-items:center;gap:4px">${c.phone||''} ${c.phone?`<a href="https://wa.me/2${c.phone.replace(/^0/,'')}" target="_blank" style="color:#25D366;font-size:14px;text-decoration:none" title="واتساب">💬</a>`:''}</div></div></div></td>
       <td>${c.natId||'--'}</td>
       <td>${c.branch||'--'} ${c.area?'— '+c.area:''}</td>
       <td>${statusBadge(c.status)}</td>
@@ -712,7 +712,7 @@ window.openProfile = async function(id) {
       <div class="profile-avatar">${getInitials(c.name)}</div>
       <div style="flex:1">
         <div class="profile-name">${c.name}</div>
-        <div class="profile-meta">${c.phone||''}</div>
+        <div class="profile-meta" style="display:flex;align-items:center;gap:8px">${c.phone||''} ${c.phone?`<a href="https://wa.me/2${c.phone.replace(/^0/,\'\')}" target="_blank" style="background:#25D366;color:white;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none">💬 واتساب</a>`:\'\' }</div>
         <span class="profile-badge">🏢 ${c.branch||''} ${c.area?'— '+c.area:''}</span>
         <span class="profile-badge">${c.status==='نشط'?'✅ نشط':c.status==='موقوف'?'🔴 موقوف':'🟡 تدريب'}</span>
       </div>
@@ -1085,9 +1085,10 @@ function renderHRTracker() {
   const tableRows = list.map((a,i) => `
     <tr id="hr-row-${a.id}">
       <td style="font-weight:700;color:var(--gray-400)">${i+1}</td>
-      <td style="font-weight:700;white-space:nowrap;min-width:140px">${a.name||'--'}</td>
+      <td style="white-space:nowrap;min-width:140px"><button onclick="viewApplicantHR('${a.id}')" style="background:none;border:none;font-weight:800;color:var(--red);cursor:pointer;font-family:Cairo,sans-serif;font-size:13px;text-decoration:underline">${a.name||'--'}</button></td>
       <td style="font-size:11px;direction:ltr">${a.natId||'--'}</td>
       <td style="white-space:nowrap">${a.phone1||'--'}</td>
+      <td style="font-weight:700;color:var(--blue)">${a.hrName||getHRName(a.recruiter)||'--'}</td>
       <td>${a.area||'--'}</td>
       <td>${a.vehicle||'--'}</td>
       <td>${a.hasLicense||'--'}</td>
@@ -1118,7 +1119,7 @@ function renderHRTracker() {
         <table style="min-width:1600px">
           <thead>
             <tr>
-              <th>#</th><th>الاسم</th><th>الرقم القومي</th><th>الموبايل</th>
+              <th>#</th><th>الاسم</th><th>الرقم القومي</th><th>الموبايل</th><th>HR المسؤول</th>
               <th>المنطقة</th><th>المركبة</th><th>الرخصة</th><th>الزونات</th>
               <th>سبق تليجراف</th><th>الاسكور</th><th>تقييم المقابلة</th>
               <th>العمولة</th><th>كود المندوب</th><th>القطاع</th>
@@ -1130,6 +1131,147 @@ function renderHRTracker() {
       </div>
     </div>`;
 }
+
+const HR_DIRECTORY_SYS = {
+  '1109806781': 'Sarah',
+};
+
+function getHRName(phone) {
+  if(!phone) return '';
+  const normalized = phone.replace(/\D/g,'').replace(/^0/,'').replace(/^20/,'');
+  const match = Object.entries(HR_DIRECTORY_SYS).find(([p]) => {
+    const np = p.replace(/\D/g,'');
+    return np === normalized || np.endsWith(normalized) || normalized.endsWith(np);
+  });
+  return match ? match[1] : '';
+}
+
+window.viewApplicantHR = function(id) {
+  const a = allApplicantsHR.find(x=>x.id===id);
+  if(!a) return;
+  document.getElementById('appDetailContent').innerHTML = `
+    <div class="profile-header">
+      <div class="profile-avatar">${(a.name||'؟').substring(0,2)}</div>
+      <div style="flex:1">
+        <div class="profile-name">${a.name||'--'}</div>
+        <div class="profile-meta" style="display:flex;align-items:center;gap:8px">${a.phone1||''} ${a.phone1?`<a href="https://wa.me/2${a.phone1.replace(/^0/,\'\')}" target="_blank" style="background:#25D366;color:white;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none">💬 واتساب</a>`:\'\' }</div>
+        <span class="profile-badge">HR: ${a.hrName||getHRName(a.recruiter)||'--'}</span>
+        <span class="profile-badge">${a.interviewResult||'جديد'}</span>
+      </div>
+    </div>
+    <div class="profile-body">
+      <div class="form-section" style="margin-top:0">البيانات الشخصية</div>
+      <div class="profile-grid">
+        <div class="info-item"><div class="info-item-label">الاسم</div><div class="info-item-value">${a.name||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">الرقم القومي</div><div class="info-item-value" style="direction:ltr">${a.natId||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">الموبايل الأساسي</div><div class="info-item-value">${a.phone1||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">الموبايل الثاني</div><div class="info-item-value">${a.phone2||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">الحالة الاجتماعية</div><div class="info-item-value">${a.marital||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">الموقف من التجنيد</div><div class="info-item-value">${a.military||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">المؤهل العلمي</div><div class="info-item-value">${a.education||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">نوع الهاتف</div><div class="info-item-value">${a.phoneType||'--'}</div></div>
+      </div>
+      <div class="form-section">بيانات السكن</div>
+      <div class="profile-grid">
+        <div class="info-item" style="grid-column:1/-1"><div class="info-item-label">عنوان البطاقة</div><div class="info-item-value">${a.cardAddress||'--'}</div></div>
+        <div class="info-item" style="grid-column:1/-1"><div class="info-item-label">العنوان الحالي</div><div class="info-item-value">${a.currentAddress||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">المنطقة</div><div class="info-item-value">${a.area||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">علامة مميزة</div><div class="info-item-value">${a.landmark||'--'}</div></div>
+      </div>
+      <div class="form-section">المركبة والخبرة</div>
+      <div class="profile-grid">
+        <div class="info-item"><div class="info-item-label">المركبة</div><div class="info-item-value">${a.vehicle||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">رخصة قيادة</div><div class="info-item-value">${a.hasLicense||'--'}</div></div>
+        <div class="info-item" style="grid-column:1/-1"><div class="info-item-label">الزونات الأساسية</div><div class="info-item-value">${a.zones1||'--'}</div></div>
+        <div class="info-item" style="grid-column:1/-1"><div class="info-item-label">خبرة سابقة</div><div class="info-item-value">${a.experience||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">عمل في تليجراف</div><div class="info-item-value">${a.workedBefore||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">أقارب في تليجراف</div><div class="info-item-value">${a.hasRelatives||'--'}</div></div>
+      </div>
+      <div class="form-section">بيانات الطوارئ</div>
+      <div class="profile-grid">
+        <div class="info-item"><div class="info-item-label">رقم الطوارئ</div><div class="info-item-value">${a.emergency||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">درجة القرابة</div><div class="info-item-value">${a.relation||'--'}</div></div>
+      </div>
+      <div class="form-section">بيانات HR</div>
+      <div class="form-grid" style="margin-bottom:16px">
+        <div class="form-group">
+          <label class="form-label">الاسكور</label>
+          <input class="form-input" id="hr_score" type="number" placeholder="0-100" value="${a.hrScore||''}" >
+        </div>
+        <div class="form-group">
+          <label class="form-label">تقييم المقابلة</label>
+          <select class="form-input" id="hr_result">
+            <option value="">-- اختار --</option>
+            <option ${a.interviewResult==='Accepted - Started Work'?'selected':''}>Accepted - Started Work</option>
+            <option ${a.interviewResult==='Accepted - Pending'?'selected':''}>Accepted - Pending</option>
+            <option ${a.interviewResult==='Rejected'?'selected':''}>Rejected</option>
+            <option ${a.interviewResult==='No Show'?'selected':''}>No Show</option>
+            <option ${a.interviewResult==='Postponed'?'selected':''}>Postponed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">العمولة (جنيه)</label>
+          <input class="form-input" id="hr_commission" type="number" placeholder="جنيه" value="${a.hrCommission||''}" >
+        </div>
+        <div class="form-group">
+          <label class="form-label">كود المندوب</label>
+          <input class="form-input" id="hr_code" type="text" placeholder="TGxxxxxxx" value="${a.courierCode||''}" >
+        </div>
+        <div class="form-group">
+          <label class="form-label">القطاع / الفرع</label>
+          <input class="form-input" id="hr_sector" type="text" placeholder="الفرع أو الإدارة" value="${a.sector||''}" >
+        </div>
+        <div class="form-group">
+          <label class="form-label">تاريخ المقابلة</label>
+          <input class="form-input" id="hr_date" type="date" value="${a.interviewDate||''}" >
+        </div>
+        <div class="form-group">
+          <label class="form-label">تمت بواسطة</label>
+          <input class="form-input" id="hr_by" type="text" placeholder="اسم HR" value="${a.interviewedBy||''}" >
+        </div>
+        <div class="form-group">
+          <label class="form-label">رقم بوليصة الاستعلام</label>
+          <input class="form-input" id="hr_inquiry" type="text" placeholder="رقم البوليصة" value="${a.inquiryNo||''}" >
+        </div>
+        <div class="form-group full">
+          <label class="form-label">ملحوظة إضافية</label>
+          <textarea class="form-input" id="hr_notes" rows="2" placeholder="ملحوظة...">${a.hrNotes||''}</textarea>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">ملحوظة أخرى</label>
+          <textarea class="form-input" id="hr_notes2" rows="2" placeholder="ملحوظة إضافية...">${a.hrNotes2||''}</textarea>
+        </div>
+      </div>
+      <div style="padding:0 0 16px">
+        <button class="btn btn-primary" style="width:100%" onclick="saveHRFromProfile('${a.id}')">💾 حفظ بيانات HR</button>
+      </div>
+    </div>\`;
+  openModal('appDetail');
+};
+
+
+window.saveHRFromProfile = async function(id) {
+  const data = {
+    hrScore: document.getElementById('hr_score').value ? Number(document.getElementById('hr_score').value) : null,
+    interviewResult: document.getElementById('hr_result').value,
+    hrCommission: document.getElementById('hr_commission').value ? Number(document.getElementById('hr_commission').value) : null,
+    courierCode: document.getElementById('hr_code').value,
+    sector: document.getElementById('hr_sector').value,
+    interviewDate: document.getElementById('hr_date').value,
+    interviewedBy: document.getElementById('hr_by').value,
+    inquiryNo: document.getElementById('hr_inquiry').value,
+    hrNotes: document.getElementById('hr_notes').value,
+    hrNotes2: document.getElementById('hr_notes2').value,
+  };
+  try {
+    await updateDoc(doc(db,'applicants',id), data);
+    showToast('✅ تم حفظ بيانات HR', 'success');
+    closeModal('appDetail');
+    loadHRTracker();
+  } catch(e) {
+    showToast('❌ خطأ: '+e.message, 'error');
+  }
+};
 
 window.switchHRTab = function(btn, tab) {
   document.querySelectorAll('#page-hrtracker .tab').forEach(t=>t.classList.remove('active'));
