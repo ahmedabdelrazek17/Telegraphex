@@ -421,8 +421,10 @@
           </select>
         </div>
         <div class="form-group full">
-          <label class="form-label">رقم المسؤول الذي تواصل معك</label>
-          <input class="form-input" id="f_recruiter" type="tel" placeholder="رقم المسؤول">
+          <label class="form-label">رقم المسؤول الذي تواصل معك بخصوص موعد المقابلة <span class="req">*</span></label>
+          <input class="form-input" id="f_recruiter" type="tel" placeholder="01X XXXX XXXX" oninput="detectHR(this.value)">
+          <div id="hrDetected" style="display:none;margin-top:6px;padding:8px 12px;background:var(--green-bg);border-radius:6px;font-size:12px;font-weight:700;color:var(--green)"></div>
+          <div id="hrNotFound" style="display:none;margin-top:6px;padding:8px 12px;background:var(--red-bg);border-radius:6px;font-size:12px;color:var(--red)">⚠️ الرقم غير معروف، تأكد من الرقم</div>
         </div>
       </div>
     </div>
@@ -456,124 +458,99 @@
 
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey: "AIzaSyBDjS7aR-rclgwaHij6vOULWYHpk60Rh8U",
-  authDomain: "telegraph-70db4.firebaseapp.com",
-  projectId: "telegraph-70db4",
-  storageBucket: "telegraph-70db4.firebasestorage.app",
-  messagingSenderId: "352180136479",
-  appId: "1:352180136479:web:b12f4ac45269f013f2c32a"
-});
-const db = getFirestore(app);
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const { createClient } = supabase;
+const sb = createClient('https://tpretakvzpjzxazahffq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcmV0YWt2enBqenhhemFoZmZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTM3NzIsImV4cCI6MjA5NjMyOTc3Mn0.JQZwOx6vECzZdGN3aLeZtGaT--0Ol3iuhoyiKeF1V_k');
 
 let currentPage = 1;
 const totalPages = 5;
 
+const HR_DIRECTORY = {
+  '1109806781': { name: 'Sarah', fullName: 'Sarah' },
+};
+
+function normalizePhone(phone) {
+  return phone.replace(/\D/g,'').replace(/^0/,'').replace(/^20/,'');
+}
+
+window.detectHR = function(value) {
+  const normalized = normalizePhone(value);
+  const detected = document.getElementById('hrDetected');
+  const notFound = document.getElementById('hrNotFound');
+  if(normalized.length < 8) { detected.style.display='none'; notFound.style.display='none'; return; }
+  const match = Object.entries(HR_DIRECTORY).find(([phone]) => {
+    const normPhone = normalizePhone(phone);
+    return normPhone===normalized||normPhone.endsWith(normalized)||normalized.endsWith(normPhone);
+  });
+  if(match) { detected.style.display='block'; detected.textContent='✅ المسؤول: '+match[1].fullName; notFound.style.display='none'; }
+  else { detected.style.display='none'; notFound.style.display='block'; }
+};
+
 window.selectRadio = function(label, groupId) {
-  document.querySelectorAll(`#${groupId} .radio-opt`).forEach(l => l.classList.remove('selected'));
+  document.querySelectorAll('#'+groupId+' .radio-opt').forEach(l=>l.classList.remove('selected'));
   label.classList.add('selected');
 };
 
 function getRadioVal(groupId) {
-  const sel = document.querySelector(`#${groupId} .radio-opt.selected input`);
+  const sel = document.querySelector('#'+groupId+' .radio-opt.selected input');
   return sel ? sel.value : '';
 }
 
-function val(id) { return document.getElementById(id)?.value?.trim() || ''; }
+function val(id) { return document.getElementById(id)?.value?.trim()||''; }
 
 window.nextPage = function(from) {
-  // Validate
-  if(from === 1) {
-    if(!val('f_name') || !val('f_natid') || !val('f_phone1') || !val('f_marital') || !val('f_military')) {
-      alert('من فضلك اكمل الحقول المطلوبة (*)'); return;
-    }
-  }
-  if(from === 2) {
-    if(!val('f_cardaddr') || !val('f_currentaddr')) {
-      alert('من فضلك اكمل العنوان'); return;
-    }
-  }
-  if(from === 4) {
-    if(!val('f_zones1')) {
-      alert('من فضلك اكتب الزونات الأساسية'); return;
-    }
-  }
-  goToPage(from + 1);
+  if(from===1&&(!val('f_name')||!val('f_natid')||!val('f_phone1')||!val('f_marital')||!val('f_military'))) { alert('من فضلك اكمل الحقول المطلوبة (*)'); return; }
+  if(from===2&&(!val('f_cardaddr')||!val('f_currentaddr'))) { alert('من فضلك اكمل العنوان'); return; }
+  if(from===4&&!val('f_zones1')) { alert('من فضلك اكتب الزونات الأساسية'); return; }
+  goToPage(from+1);
 };
 
-window.prevPage = function(from) { goToPage(from - 1); };
+window.prevPage = function(from) { goToPage(from-1); };
 
 function goToPage(page) {
-  document.getElementById('page-' + currentPage).classList.remove('active');
-  document.getElementById('step-' + currentPage).classList.remove('active');
-  document.getElementById('step-' + currentPage).classList.add('done');
+  document.getElementById('page-'+currentPage).classList.remove('active');
+  document.getElementById('step-'+currentPage).classList.remove('active');
+  document.getElementById('step-'+currentPage).classList.add('done');
   currentPage = page;
-  document.getElementById('page-' + currentPage).classList.add('active');
-  document.getElementById('step-' + currentPage).classList.remove('done');
-  document.getElementById('step-' + currentPage).classList.add('active');
-  document.getElementById('progressFill').style.width = (currentPage / totalPages * 100) + '%';
-  window.scrollTo(0, 0);
+  document.getElementById('page-'+currentPage).classList.add('active');
+  document.getElementById('step-'+currentPage).classList.remove('done');
+  document.getElementById('step-'+currentPage).classList.add('active');
+  document.getElementById('progressFill').style.width=(currentPage/totalPages*100)+'%';
+  window.scrollTo(0,0);
 }
 
 window.submitForm = async function() {
-  if(!val('f_emergency') || !val('f_relation')) {
-    alert('من فضلك اكمل بيانات الطوارئ'); return;
-  }
+  if(!val('f_emergency')||!val('f_relation')) { alert('من فضلك اكمل بيانات الطوارئ'); return; }
   const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.textContent = 'جاري الإرسال...';
-
-  const appCode = 'TG' + Date.now().toString().slice(-7);
-
-  try {
-    await addDoc(collection(db, 'applicants'), {
-      appCode,
-      name: val('f_name'),
-      natId: val('f_natid'),
-      phone1: val('f_phone1'),
-      phone2: val('f_phone2'),
-      phoneType: val('f_phonetype'),
-      marital: val('f_marital'),
-      military: val('f_military'),
-      education: val('f_education'),
-      cardAddress: val('f_cardaddr'),
-      currentAddress: val('f_currentaddr'),
-      area: val('f_area'),
-      floor: val('f_floor'),
-      apt: val('f_apt'),
-      landmark: val('f_landmark'),
-      vehicle: getRadioVal('rg_vehicle'),
-      hasLicense: getRadioVal('rg_license'),
-      hasVehicleLicense: getRadioVal('rg_vehiclelicense'),
-      experience: val('f_experience'),
-      zones1: val('f_zones1'),
-      zones2: val('f_zones2'),
-      workedBefore: getRadioVal('rg_prev'),
-      hasRelatives: getRadioVal('rg_relatives'),
-      source: val('f_source'),
-      emergency: val('f_emergency'),
-      relation: val('f_relation'),
-      recruiter: val('f_recruiter'),
-      stage: 'استمارة مقدمة',
-      status: 'جديد',
-      score: null,
-      interviewResult: null,
-      createdAt: serverTimestamp()
-    });
-
+  btn.disabled=true; btn.textContent='جاري الإرسال...';
+  const appCode = 'TG'+Date.now().toString().slice(-7);
+  const recruiter = val('f_recruiter');
+  const normalized = normalizePhone(recruiter);
+  const hrMatch = Object.entries(HR_DIRECTORY).find(([phone])=>{ const n=normalizePhone(phone); return n===normalized||n.endsWith(normalized)||normalized.endsWith(n); });
+  const hrName = hrMatch ? hrMatch[1].fullName : '';
+  const {error} = await sb.from('applicants').insert({
+    app_code:appCode, name:val('f_name'), nat_id:val('f_natid'),
+    phone1:val('f_phone1'), phone2:val('f_phone2'), phone_type:val('f_phonetype'),
+    marital:val('f_marital'), military:val('f_military'), education:val('f_education'),
+    card_address:val('f_cardaddr'), current_address:val('f_currentaddr'),
+    area:val('f_area'), floor:val('f_floor'), apt:val('f_apt'), landmark:val('f_landmark'),
+    vehicle:getRadioVal('rg_vehicle'), has_license:getRadioVal('rg_license'),
+    has_vehicle_license:getRadioVal('rg_vehiclelicense'),
+    experience:val('f_experience'), zones1:val('f_zones1'), zones2:val('f_zones2'),
+    worked_before:getRadioVal('rg_prev'), has_relatives:getRadioVal('rg_relatives'),
+    source:val('f_source'), emergency:val('f_emergency'), relation:val('f_relation'),
+    recruiter, hr_name:hrName, status:'جديد',
+  });
+  if(!error) {
     document.getElementById('page-5').classList.remove('active');
-    document.getElementById('successPage').style.display = 'block';
-    document.getElementById('appCode').textContent = appCode;
-    document.getElementById('progressFill').style.width = '100%';
-  } catch(e) {
-    alert('حدث خطأ: ' + e.message);
-    btn.disabled = false;
-    btn.textContent = '✅ إرسال الاستمارة';
-  }
+    document.getElementById('successPage').style.display='block';
+    document.getElementById('appCode').textContent=appCode;
+    document.getElementById('progressFill').style.width='100%';
+  } else { alert('حدث خطأ: '+error.message); btn.disabled=false; btn.textContent='✅ إرسال الاستمارة'; }
 };
+
+window.toggleLoanField = function() {};
 </script>
 </body>
 </html>
