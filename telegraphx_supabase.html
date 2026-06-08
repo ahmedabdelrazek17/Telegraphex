@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TelegraphX — نظام المندوبين</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E8191A;
+    --red-dark: #C21112;
+    --red-light: #FF3B3C;
+    --red-bg: #FFF0F0;
+    --red-muted: rgba(232,25,26,0.08);
+    --white: #FFFFFF;
+    --black: #0A0A0A;
+    --gray-900: #111111;
+    --gray-800: #1E1E1E;
+    --gray-700: #2C2C2C;
+    --gray-500: #666666;
+    --gray-400: #888888;
+    --gray-200: #E8E8E8;
+    --gray-100: #F4F4F4;
+    --gray-50: #FAFAFA;
+    --green: #16A34A;
+    --green-bg: #F0FDF4;
+    --amber: #D97706;
+    --amber-bg: #FFFBEB;
+    --blue: #1D4ED8;
+    --blue-bg: #EFF6FF;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Cairo', sans-serif; background: var(--gray-100); color: var(--black); min-height: 100vh; font-size: 14px; }
+
+  /* TOPBAR */
+  .topbar { background: var(--red); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(232,25,26,0.3); }
+  .topbar-logo { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 18px; }
+  .topbar-logo span { font-weight: 400; opacity: 0.85; font-size: 13px; }
+  .topbar-user { display: flex; align-items: center; gap: 8px; font-size: 13px; opacity: 0.9; }
+  .avatar-sm { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+
+  /* LAYOUT */
+  .layout { display: flex; min-height: calc(100vh - 56px); }
+
+  /* SIDEBAR */
+  .sidebar { width: 220px; background: var(--white); border-left: 1px solid var(--gray-200); padding: 16px 0; flex-shrink: 0; position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; }
+  .sidebar-label { font-size: 10px; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 1px; padding: 12px 20px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin: 0 8px; border-radius: var(--radius-sm); cursor: pointer; color: var(--gray-700); font-weight: 500; font-size: 13.5px; transition: all 0.15s; border: none; background: none; width: calc(100% - 16px); text-align: right; font-family: 'Cairo', sans-serif; }
+  .nav-item:hover { background: var(--gray-100); }
+  .nav-item.active { background: var(--red-muted); color: var(--red); font-weight: 700; }
+  .nav-badge { margin-right: auto; background: var(--red); color: white; border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+
+  /* MAIN */
+  .main { flex: 1; padding: 24px; overflow-x: hidden; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* PAGE HEADER */
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .page-title { font-size: 20px; font-weight: 900; }
+  .page-sub { font-size: 13px; color: var(--gray-400); margin-top: 2px; }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: var(--radius-sm); font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: var(--red); color: white; }
+  .btn-primary:hover { background: var(--red-dark); }
+  .btn-outline { background: white; color: var(--gray-700); border: 1px solid var(--gray-200); }
+  .btn-outline:hover { background: var(--gray-50); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-ghost { background: none; border: none; color: var(--gray-500); padding: 6px 8px; font-size: 13px; font-family: 'Cairo', sans-serif; cursor: pointer; }
+  .btn-ghost:hover { color: var(--red); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-card { background: var(--white); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); border: 1px solid var(--gray-200); }
+  .stat-label { font-size: 12px; color: var(--gray-400); font-weight: 600; margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 900; line-height: 1; }
+  .stat-sub { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+  .stat-red .stat-value { color: var(--red); }
+  .stat-green .stat-value { color: var(--green); }
+  .stat-amber .stat-value { color: var(--amber); }
+
+  /* CARD */
+  .card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--gray-200); box-shadow: var(--shadow); }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 15px; font-weight: 700; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { border-bottom: 2px solid var(--gray-200); }
+  th { text-align: right; padding: 10px 14px; font-size: 11px; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  td { padding: 12px 14px; font-size: 13px; color: var(--gray-700); border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+  tr:hover td { background: var(--gray-50); }
+  tr:last-child td { border-bottom: none; }
+
+  /* COURIER */
+  .courier-info { display: flex; align-items: center; gap: 10px; }
+  .courier-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--red); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); }
+  .badge-blue { background: var(--blue-bg); color: var(--blue); }
+  .badge-gray { background: var(--gray-100); color: var(--gray-500); }
+
+  /* STARS */
+  .stars { display: flex; align-items: center; gap: 2px; direction: ltr; }
+  .star { font-size: 14px; color: var(--gray-200); }
+  .star.on { color: #F59E0B; }
+  .stars-score { font-size: 11px; color: var(--gray-400); margin-right: 4px; font-weight: 700; }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .search-box { display: flex; align-items: center; gap: 8px; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 8px 12px; flex: 1; min-width: 200px; }
+  .search-box input { border: none; outline: none; font-family: 'Cairo', sans-serif; font-size: 13px; color: var(--black); background: none; flex: 1; text-align: right; }
+  select.filter-select { border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 8px 12px; font-family: 'Cairo', sans-serif; font-size: 13px; color: var(--gray-700); background: var(--white); cursor: pointer; outline: none; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--white); border-radius: 16px; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-md); }
+  .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: white; z-index: 1; }
+  .modal-title { font-size: 17px; font-weight: 800; }
+  .modal-body { padding: 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--gray-200); display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-size: 12px; font-weight: 700; color: var(--gray-700); }
+  .form-input { border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 9px 12px; font-family: 'Cairo', sans-serif; font-size: 13px; color: var(--black); outline: none; transition: border 0.15s; background: var(--white); text-align: right; width: 100%; }
+  .form-input:focus { border-color: var(--red); }
+  .form-section { font-size: 11px; font-weight: 800; color: var(--red); text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--red-muted); }
+
+  /* PROFILE */
+  .profile-header { background: var(--red); border-radius: var(--radius) var(--radius) 0 0; padding: 24px; color: white; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; border: 3px solid rgba(255,255,255,0.4); flex-shrink: 0; }
+  .profile-name { font-size: 20px; font-weight: 900; }
+  .profile-meta { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+  .profile-badge { background: rgba(255,255,255,0.2); color: white; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 6px; margin-left: 4px; }
+  .profile-body { padding: 20px; }
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .info-item { background: var(--gray-50); border-radius: var(--radius-sm); padding: 12px 14px; border: 1px solid var(--gray-200); }
+  .info-item-label { font-size: 11px; color: var(--gray-400); font-weight: 700; margin-bottom: 3px; }
+  .info-item-value { font-size: 14px; font-weight: 700; color: var(--black); }
+
+  /* RATING */
+  .rating-options { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rating-opt { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--gray-200); background: white; color: var(--gray-600); transition: all 0.12s; font-family: 'Cairo', sans-serif; }
+  .rating-opt.sel-5 { border-color: var(--green); background: var(--green-bg); color: var(--green); }
+  .rating-opt.sel-4 { border-color: #65A30D; background: #F7FEE7; color: #65A30D; }
+  .rating-opt.sel-3 { border-color: var(--amber); background: var(--amber-bg); color: var(--amber); }
+  .rating-opt.sel-2 { border-color: #EA580C; background: #FFF7ED; color: #EA580C; }
+  .rating-opt.sel-1 { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+
+  /* REQUESTS */
+  .req-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--gray-200); padding: 16px 20px; margin-bottom: 12px; box-shadow: var(--shadow); display: flex; align-items: flex-start; gap: 14px; }
+  .req-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .req-icon.complaint { background: #FFF1F2; }
+  .req-icon.suggestion { background: #EFF6FF; }
+  .req-icon.loan { background: #FFF7ED; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; background: var(--gray-100); padding: 4px; border-radius: var(--radius-sm); margin-bottom: 20px; }
+  .tab { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--gray-500); border: none; background: none; font-family: 'Cairo', sans-serif; transition: all 0.15s; }
+  .tab.active { background: white; color: var(--black); box-shadow: var(--shadow); font-weight: 700; }
+
+  /* LOADING */
+  .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--gray-400); font-size: 13px; gap: 8px; }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--gray-200); border-top-color: var(--red); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--black); color: white; padding: 12px 24px; border-radius: 10px; font-size: 13px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 48px 24px; color: var(--gray-400); }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .profile-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="rgba(255,255,255,0.2)"/><text x="14" y="20" text-anchor="middle" fill="white" font-family="Cairo" font-weight="900" font-size="14">T</text></svg>
+    Telegraph
+    <span>| نظام المندوبين</span>
+  </div>
+  <div class="topbar-user">
+    <div class="avatar-sm">م</div>
+    <span id="currentUserName">جاري التحميل...</span>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-label">الرئيسية</div>
+  <button class="nav-item active" onclick="showPage('dashboard',this)">📊 لوحة التحكم</button>
+  <div class="sidebar-label">المندوبين</div>
+  <button class="nav-item" onclick="showPage('couriers',this)">🛵 كل المندوبين</button>
+  <button class="nav-item" onclick="showPage('hiring',this)">📋 التوظيف</button>
+  <button class="nav-item" onclick="showPage('rating',this)">⭐ التقييم</button>
+  <div class="sidebar-label">الطلبات</div>
+  <button class="nav-item" onclick="showPage('requests',this)">📩 الطلبات <span class="nav-badge" id="reqBadge">0</span></button>
+  <div class="sidebar-label">الفروع</div>
+  <button class="nav-item" onclick="showPage('branches',this)">🏢 الفروع</button>
+  <div class="sidebar-label">التقديمات</div>
+  <button class="nav-item" onclick="showPage('applicants',this)">📝 استمارات التقديم <span class="nav-badge" id="appBadge">0</span></button>
+  <button class="nav-item" onclick="showPage('hrtracker',this)">🎯 Interview Tracker</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div class="page-header">
+      <div><div class="page-title">لوحة التحكم</div><div class="page-sub">نظرة عامة على فريق المندوبين</div></div>
+      <button class="btn btn-primary" onclick="openModal('addCourier')">+ إضافة مندوب</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card stat-red"><div class="stat-label">إجمالي المندوبين</div><div class="stat-value" id="statTotal">--</div><div class="stat-sub" id="statBranches">جاري التحميل</div></div>
+      <div class="stat-card stat-green"><div class="stat-label">نشطين</div><div class="stat-value" id="statActive">--</div><div class="stat-sub">حالة نشط</div></div>
+      <div class="stat-card stat-amber"><div class="stat-label">طلبات معلقة</div><div class="stat-value" id="statPending">--</div><div class="stat-sub">سلف + شكاوى</div></div>
+      <div class="stat-card"><div class="stat-label">متوسط التقييم</div><div class="stat-value" id="statRating">--</div><div class="stat-sub">من 5 نجوم</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">أعلى المندوبين تقييماً</div></div>
+        <div id="topCouriers"><div class="loading"><div class="spinner"></div>جاري التحميل...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">آخر الطلبات</div><button class="btn btn-ghost btn-sm" onclick="showPage('requests',null)">عرض الكل ←</button></div>
+        <div id="latestRequests"><div class="loading"><div class="spinner"></div>جاري التحميل...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURIERS -->
+  <div id="page-couriers" class="page">
+    <div class="page-header">
+      <div><div class="page-title">المندوبين</div><div class="page-sub">إدارة جميع المندوبين</div></div>
+      <button class="btn btn-primary" onclick="openModal('addCourier')">+ إضافة مندوب</button>
+    </div>
+    <div class="toolbar">
+      <div class="search-box"><span>🔍</span><input type="text" id="searchInput" placeholder="ابحث بالاسم..." oninput="filterCouriers()"></div>
+      <select class="filter-select" id="filterBranch" onchange="filterCouriers()">
+        <option value="">كل الفروع</option>
+        <option>الإسكندرية</option><option>القاهرة</option><option>الجيزة</option>
+      </select>
+      <select class="filter-select" id="filterStatus" onchange="filterCouriers()">
+        <option value="">كل الحالات</option>
+        <option>نشط</option><option>موقوف</option><option>قيد التدريب</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>المندوب</th><th>رقم البطاقة</th><th>الفرع</th><th>الحالة</th><th>التقييم</th><th>السلف</th><th></th></tr></thead>
+          <tbody id="couriersTable"><tr><td colspan="7"><div class="loading"><div class="spinner"></div>جاري التحميل...</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- HIRING -->
+  <div id="page-hiring" class="page">
+    <div class="page-header">
+      <div><div class="page-title">التوظيف</div><div class="page-sub">مراحل قبول المندوبين الجدد</div></div>
+      <button class="btn btn-primary" onclick="openModal('addApplicant')">+ متقدم جديد</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px" id="hiringBoard">
+      <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>جاري التحميل...</div>
+    </div>
+  </div>
+
+  <!-- RATING -->
+  <div id="page-rating" class="page">
+    <div class="page-header">
+      <div><div class="page-title">التقييم</div><div class="page-sub">تقييم المندوبين على 7 معايير</div></div>
+      <button class="btn btn-primary" onclick="openModal('addRating')">+ إضافة تقييم</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>المندوب</th><th>الحضور</th><th>المظهر</th><th>العملاء</th><th>الجروب</th><th>التوريد</th><th>الأبديت</th><th>الفرع</th><th>النجوم</th><th>التاريخ</th></tr></thead>
+          <tbody id="ratingsTable"><tr><td colspan="10"><div class="loading"><div class="spinner"></div>جاري التحميل...</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- REQUESTS -->
+  <div id="page-requests" class="page">
+    <div class="page-header">
+      <div><div class="page-title">الطلبات</div><div class="page-sub">سلف، شكاوى، اقتراحات</div></div>
+      <button class="btn btn-primary" onclick="openModal('addRequest')">+ طلب جديد</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchReqTab(this,'all')">الكل</button>
+      <button class="tab" onclick="switchReqTab(this,'loan')">💰 سلف</button>
+      <button class="tab" onclick="switchReqTab(this,'complaint')">⚠️ شكاوى</button>
+      <button class="tab" onclick="switchReqTab(this,'suggestion')">💡 اقتراحات</button>
+    </div>
+    <div id="requestsList"><div class="loading"><div class="spinner"></div>جاري التحميل...</div></div>
+  </div>
+
+  <!-- HR TRACKER -->
+  <div id="page-hrtracker" class="page">
+    <div class="page-header">
+      <div><div class="page-title">Interview Tracker</div><div class="page-sub">متابعة المقابلات لكل HR</div></div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchHRTab(this,'sarah')">👩 Sarah</button>
+      <button class="tab" onclick="switchHRTab(this,'all')">📋 الكل</button>
+    </div>
+    <div id="hrContent"><div class="loading"><div class="spinner"></div>جاري التحميل...</div></div>
+  </div>
+
+  <!-- BRANCHES -->
+  <div id="page-branches" class="page">
+    <div class="page-header">
+      <div><div class="page-title">الفروع</div><div class="page-sub">بيانات الفروع ومديريها</div></div>
+    </div>
+    <div id="branchesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
+      <div class="loading"><div class="spinner"></div>جاري التحميل...</div>
+    </div>
+  </div>
+
+  <!-- APPLICANTS -->
+  <div id="page-applicants" class="page">
+    <div class="page-header">
+      <div><div class="page-title">استمارات التقديم</div><div class="page-sub">كل المتقدمين من الاستمارة الأونلاين</div></div>
+      <a href="https://ahmedabdelrazek17.github.io/Telegraphex/telegraphx_qr.html" target="_blank" class="btn btn-primary">📱 QR Code الاستمارة</a>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchAppTab(this,'all')">الكل</button>
+      <button class="tab" onclick="switchAppTab(this,'جديد')">🆕 جديد</button>
+      <button class="tab" onclick="switchAppTab(this,'مقبول')">✅ مقبول</button>
+      <button class="tab" onclick="switchAppTab(this,'مرفوض')">❌ مرفوض</button>
+    </div>
+    <div id="applicantsList"><div class="loading"><div class="spinner"></div>جاري التحميل...</div></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Add Courier -->
+<div class="modal-overlay" id="modal-addCourier">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">إضافة مندوب جديد</div><button class="btn btn-ghost" onclick="closeModal('addCourier')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-section">البيانات الأساسية</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">الاسم الكامل *</label><input class="form-input" id="c_name" type="text" placeholder="الاسم رباعي"></div>
+        <div class="form-group"><label class="form-label">رقم الموبايل *</label><input class="form-input" id="c_phone" type="text" placeholder="01X XXXX XXXX"></div>
+        <div class="form-group"><label class="form-label">رقم البطاقة الوطنية *</label><input class="form-input" id="c_natid" type="text" placeholder="14 رقم"></div>
+        <div class="form-group"><label class="form-label">تاريخ الميلاد</label><input class="form-input" id="c_dob" type="date"></div>
+        <div class="form-group"><label class="form-label">رقم الطوارئ *</label><input class="form-input" id="c_emergency" type="text" placeholder="رقم أحد أفراد الأسرة"></div>
+        <div class="form-group"><label class="form-label">الفرع *</label>
+          <select class="form-input" id="c_branch"><option>الإسكندرية</option><option>القاهرة</option><option>الجيزة</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">المنطقة</label><input class="form-input" id="c_area" type="text" placeholder="مثال: محرم بك..."></div>
+        <div class="form-group"><label class="form-label">سكور الإنترفيو</label><input class="form-input" id="c_score" type="number" placeholder="من 35 للقبول"></div>
+        <div class="form-group"><label class="form-label">الحالة</label>
+          <select class="form-input" id="c_status"><option>نشط</option><option>قيد التدريب</option><option>موقوف</option></select>
+        </div>
+      </div>
+      <div class="form-section">الوثائق</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">إيصال الأمانة</label><select class="form-input" id="c_doc1"><option>لم يوقع بعد</option><option>تم التوقيع</option></select></div>
+        <div class="form-group"><label class="form-label">إقرار استلام الشنط</label><select class="form-input" id="c_doc2"><option>لم يوقع بعد</option><option>تم التوقيع</option></select></div>
+        <div class="form-group"><label class="form-label">الأوراق المطلوبة</label><select class="form-input" id="c_doc3"><option>ناقصة</option><option>مكتملة</option></select></div>
+        <div class="form-group"><label class="form-label">التيشيرت والصندوق</label><select class="form-input" id="c_doc4"><option>لم يستلم</option><option>تم الاستلام</option></select></div>
+      </div>
+      <div class="form-section">السجل المالي</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">السلف الحالية (جنيه)</label><input class="form-input" id="c_loans" type="number" value="0"></div>
+        <div class="form-group"><label class="form-label">عمولة هذا الشهر (جنيه)</label><input class="form-input" id="c_commission" type="number" value="0"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addCourier')">إلغاء</button>
+      <button class="btn btn-primary" id="saveCourierBtn" onclick="saveCourier()">💾 حفظ المندوب</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Rating -->
+<div class="modal-overlay" id="modal-addRating">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">إضافة تقييم</div><button class="btn btn-ghost" onclick="closeModal('addRating')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:20px">
+        <label class="form-label">اختار المندوب</label>
+        <select class="form-input" id="r_courier"></select>
+      </div>
+      <div class="form-section">معايير التقييم</div>
+      <div style="display:flex;flex-direction:column;gap:16px" id="ratingCriteria">
+        <div data-key="attendance"><div class="form-label" style="margin-bottom:8px">🕐 الحضور والانصراف</div>
+          <div class="rating-options">
+            <button class="rating-opt" onclick="selOpt(this,5,'attendance')">دايماً حاضر</button>
+            <button class="rating-opt" onclick="selOpt(this,4,'attendance')">غياب نادر</button>
+            <button class="rating-opt" onclick="selOpt(this,3,'attendance')">متوسط</button>
+            <button class="rating-opt" onclick="selOpt(this,2,'attendance')">غياب كتير</button>
+            <button class="rating-opt" onclick="selOpt(this,1,'attendance')">سيئ جداً</button>
+          </div>
+        </div>
+        <div data-key="uniform"><div class="form-label" style="margin-bottom:8px">👔 المظهر واليونيفورم</div>
+          <div class="rating-options">
+            <button class="rating-opt" onclick="selOpt(this,5,'uniform')">ملتزم دايماً</button>
+            <button class="rating-opt" onclick="selOpt(this,4,'uniform')">ملتزم في الغالب</button>
+            <button class="rating-opt" onclick="selOpt(this,3,'uniform')">أحياناً بدون</button>
+            <button class="rating-opt" onclick="selOpt(this,1,'uniform')">مش ملتزم</button>
+          </div>
+        </div>
+        <div data-key="clients"><div class="form-label" style="margin-bottom:8px">🤝 سلوكه مع العملاء</div>
+          <div class="rating-options">
+            <button class="rating-opt" onclick="selOpt(this,5,'clients')">ممتاز</button>
+            <button class="rating-opt" onclick="selOpt(this,4,'clients')">جيد جداً</button>
+            <button class="rating-opt" onclick="selOpt(this,3,'clients')">متوسط</button>
+            <button class="rating-opt" onclick="selOpt(this,2,'clients')">ضعيف</button>
+            <button class="rating-opt" onclick="selOpt(this,1,'clients')">شكاوى متكررة</button>
+          </div>
+        </div>
+        <div data-key="group"><div class="form-label" style="margin-bottom:8px">💬 سلوكه في الجروب</div>
+          <div class="rating-options">
+            <button class="rating-opt" onclick="selOpt(this,5,'group')">محترم ومتعاون</button>
+            <button class="rating-opt" onclick="selOpt(this,3,'group')">عادي</button>
+            <button class="rating-opt" onclick="selOpt(this,2,'group')">بيحور في الكلام</button>
+            <button class="rating-opt" onclick="selOpt(this,1,'group')">مشاكل في الجروب</button>
+          </div>
+        </div>
+        <div data-key="payment"><div class="form-label" style="margin-bottom:8px">💰 التوريد والسلف</div>
+          <div class="rating-options">
+            <button class="rating-opt" onclick="selOpt(this,5,'payment')">منتظم دايماً</button>
+            <button class="rating-opt" onclick="selOpt(this,3,'payment')">أحياناً يتأخر</button>
+            <button class="rating-opt" onclick="selOpt(this,2,'payment')">سلف متراكمة</button>
+            <button class="rating-opt" onclick="selOpt(this,1,'payment')">مشكلة توريد</button>
+          </div>
+        </div>
+        <div data-key="update"><div class="form-label" style="margin-bottom:8px">⚡ الأبديت في الوقت</div>
+          <div class="rating-options">
+            <button class="rating-opt" onclick="selOpt(this,5,'update')">فوري دايماً</button>
+            <button class="rating-opt" onclick="selOpt(this,4,'update')">في الغالب وقتي</button>
+            <button class="rating-opt" onclick="selOpt(this,2,'update')">بيتأخر كتير</button>
+            <button class="rating-opt" onclick="selOpt(this,1,'update')">مش بيأبدت</button>
+          </div>
+        </div>
+        <div data-key="branch"><div class="form-label" style="margin-bottom:8px">🏢 الالتزام بالفرع</div>
+          <div class="rating-options">
+            <button class="rating-opt" onclick="selOpt(this,5,'branch')">ملتزم تماماً</button>
+            <button class="rating-opt" onclick="selOpt(this,3,'branch')">متوسط</button>
+            <button class="rating-opt" onclick="selOpt(this,1,'branch')">غير ملتزم</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:20px;background:var(--red-muted);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(232,25,26,0.15)">
+        <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">التقييم النهائي</div>
+        <div class="stars" style="justify-content:center;gap:6px" id="finalStars">
+          <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--red);margin-top:4px" id="finalScoreText">اختار التقييم لكل المعايير</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addRating')">إلغاء</button>
+      <button class="btn btn-primary" id="saveRatingBtn" onclick="saveRating()">💾 حفظ التقييم</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Request -->
+<div class="modal-overlay" id="modal-addRequest">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">طلب جديد</div><button class="btn btn-ghost" onclick="closeModal('addRequest')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">المندوب</label><select class="form-input" id="req_courier"></select></div>
+        <div class="form-group"><label class="form-label">نوع الطلب</label>
+          <select class="form-input" id="req_type" onchange="toggleLoanField()">
+            <option value="complaint">⚠️ شكوى</option>
+            <option value="suggestion">💡 اقتراح</option>
+            <option value="loan">💰 سلفة</option>
+          </select>
+        </div>
+        <div class="form-group full" id="loanAmountGroup" style="display:none">
+          <label class="form-label">مبلغ السلفة (جنيه)</label>
+          <input class="form-input" id="req_amount" type="number" placeholder="أدخل المبلغ">
+          <small style="color:var(--gray-400);font-size:11px;margin-top:4px">سيتم التحقق من أن المبلغ لا يتجاوز عمولة المندوب</small>
+        </div>
+        <div class="form-group full"><label class="form-label">التفاصيل</label><textarea class="form-input" id="req_details" rows="4" placeholder="اكتب التفاصيل هنا..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addRequest')">إلغاء</button>
+      <button class="btn btn-primary" id="saveRequestBtn" onclick="saveRequest()">💾 إرسال الطلب</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="modal-profile">
+  <div class="modal" style="max-width:700px">
+    <div id="profileContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('profile')">إغلاق</button>
+      <button class="btn btn-primary" onclick="closeModal('profile');openModal('addRating')">⭐ إضافة تقييم</button>
+    </div>
+  </div>
+</div>
+
+<!-- App Detail Modal -->
+<div class="modal-overlay" id="modal-appDetail">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <div class="modal-title">بيانات المتقدم الكاملة</div>
+      <button class="btn btn-ghost" onclick="closeModal('appDetail')">✕</button>
+    </div>
+    <div id="appDetailContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('appDetail')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const { createClient } = supabase;
+const sb = createClient('https://tpretakvzpjzxazahffq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcmV0YWt2enBqenhhemFoZmZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTM3NzIsImV4cCI6MjA5NjMyOTc3Mn0.JQZwOx6vECzZdGN3aLeZtGaT--0Ol3iuhoyiKeF1V_k');
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+function getInitials(name) { return (name||'؟').split(' ').slice(0,2).map(n=>n[0]).join(''); }
+function starsHtml(score, size=14) {
+  const r = Math.round(score||0);
+  return Array.from({length:5},(_,i)=>`<span class="star${i<r?' on':''}" style="font-size:${size}px">★</span>`).join('');
+}
+function statusBadge(s) {
+  if(s==='نشط') return '<span class="badge badge-green">● نشط</span>';
+  if(s==='موقوف') return '<span class="badge badge-red">● موقوف</span>';
+  return '<span class="badge badge-amber">● تدريب</span>';
+}
+function formatDate(d) { if(!d) return '--'; return new Date(d).toLocaleDateString('ar-EG'); }
+
+let allCouriers=[], allRequests=[], allApplicants=[], allApplicantsHR=[];
+let currentReqTab='all', currentAppTab='all', currentHRTab='sarah';
+let ratingScores = {};
+
+// DASHBOARD
+async function loadDashboard() {
+  const [{data:couriers},{data:requests},{data:ratings}] = await Promise.all([
+    sb.from('couriers').select('*'),
+    sb.from('requests').select('*'),
+    sb.from('ratings').select('*'),
+  ]);
+  document.getElementById('statTotal').textContent = couriers?.length||0;
+  document.getElementById('statActive').textContent = couriers?.filter(c=>c.status==='نشط').length||0;
+  const pending = requests?.filter(r=>r.status==='معلق').length||0;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('reqBadge').textContent = pending;
+  const avg = ratings?.length ? (ratings.reduce((s,r)=>s+(r.avg_score||0),0)/ratings.length).toFixed(1) : '--';
+  document.getElementById('statRating').textContent = avg==='--'?'--':avg+' ⭐';
+  const sorted = [...(couriers||[])].sort((a,b)=>(b.avg_rating||0)-(a.avg_rating||0)).slice(0,3);
+  document.getElementById('topCouriers').innerHTML = sorted.length ? sorted.map(c=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--gray-100)">
+      <div class="courier-avatar">${getInitials(c.name)}</div>
+      <div style="flex:1"><div style="font-weight:700;font-size:13px">${c.name}</div><div style="font-size:11px;color:var(--gray-400)">${c.branch||''}</div></div>
+      <div class="stars">${starsHtml(c.avg_rating||0)}<span class="stars-score">${(c.avg_rating||0).toFixed(1)}</span></div>
+    </div>`).join('') : '<div class="empty"><div class="empty-icon">🛵</div><div>لا يوجد مندوبين</div></div>';
+  const latest = (requests||[]).slice(-3).reverse();
+  document.getElementById('latestRequests').innerHTML = latest.length ? latest.map(r=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--gray-100)">
+      <div style="font-size:18px">${r.type==='loan'?'💰':r.type==='complaint'?'⚠️':'💡'}</div>
+      <div style="flex:1"><div style="font-weight:700;font-size:13px">${r.type==='loan'?'سلفة':r.type==='complaint'?'شكوى':'اقتراح'} — ${r.courier_name}</div></div>
+      <span class="badge ${r.status==='معلق'?'badge-amber':r.status==='مقبول'?'badge-green':'badge-red'}">${r.status}</span>
+    </div>`).join('') : '<div class="empty"><div class="empty-icon">📩</div><div>لا يوجد طلبات</div></div>';
+}
+
+// COURIERS
+async function loadCouriers() {
+  const {data} = await sb.from('couriers').select('*').order('created_at',{ascending:false});
+  allCouriers = data||[];
+  renderCouriers(allCouriers);
+  const opts = allCouriers.map(c=>`<option value="${c.id}">${c.name} — ${c.hr_code||c.id.substring(0,6)}</option>`).join('');
+  document.getElementById('r_courier').innerHTML = opts;
+  document.getElementById('req_courier').innerHTML = opts;
+}
+
+function renderCouriers(list) {
+  const tbody = document.getElementById('couriersTable');
+  if(!list.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-icon">🛵</div><div>لا يوجد مندوبين</div></div></td></tr>'; return; }
+  tbody.innerHTML = list.map(c=>`<tr>
+    <td><div class="courier-info"><div class="courier-avatar">${getInitials(c.name)}</div><div>
+      <div style="font-weight:700;font-size:13px">${c.name}</div>
+      <div style="font-size:11px;color:var(--gray-400);display:flex;align-items:center;gap:4px">${c.phone||''} ${c.phone?`<a href="https://wa.me/2${c.phone.replace(/^0/,'')}" target="_blank" style="color:#25D366;font-size:14px;text-decoration:none">💬</a>`:''}</div>
+    </div></div></td>
+    <td>${c.nat_id||'--'}</td>
+    <td>${c.branch||'--'} ${c.area?'— '+c.area:''}</td>
+    <td>${statusBadge(c.status)}</td>
+    <td><div class="stars">${starsHtml(c.avg_rating||0)}<span class="stars-score">${(c.avg_rating||0).toFixed(1)}</span></div></td>
+    <td>${c.loans>0?`<span class="badge badge-amber">${c.loans} ج</span>`:'<span class="badge badge-gray">لا يوجد</span>'}</td>
+    <td><button class="btn btn-outline btn-sm" onclick="openProfile('${c.id}')">بروفايل</button></td>
+  </tr>`).join('');
+}
+
+window.filterCouriers = function() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const branch = document.getElementById('filterBranch').value;
+  const status = document.getElementById('filterStatus').value;
+  renderCouriers(allCouriers.filter(c=>(!search||c.name.toLowerCase().includes(search))&&(!branch||c.branch===branch)&&(!status||c.status===status)));
+};
+
+window.saveCourier = async function() {
+  const name = document.getElementById('c_name').value.trim();
+  const phone = document.getElementById('c_phone').value.trim();
+  const nat_id = document.getElementById('c_natid').value.trim();
+  if(!name||!phone||!nat_id) { showToast('من فضلك اكمل الحقول المطلوبة', 'error'); return; }
+  const btn = document.getElementById('saveCourierBtn');
+  btn.disabled=true; btn.textContent='جاري الحفظ...';
+  const {error} = await sb.from('couriers').insert({
+    name, phone, nat_id,
+    dob: document.getElementById('c_dob').value,
+    emergency: document.getElementById('c_emergency').value,
+    branch: document.getElementById('c_branch').value,
+    area: document.getElementById('c_area').value,
+    interview_score: Number(document.getElementById('c_score').value)||0,
+    status: document.getElementById('c_status').value,
+    doc_receipt: document.getElementById('c_doc1').value,
+    doc_bags: document.getElementById('c_doc2').value,
+    doc_papers: document.getElementById('c_doc3').value,
+    doc_uniform: document.getElementById('c_doc4').value,
+    loans: Number(document.getElementById('c_loans').value)||0,
+    commission: Number(document.getElementById('c_commission').value)||0,
+  });
+  if(error) showToast('❌ خطأ: '+error.message, 'error');
+  else { showToast('✅ تم حفظ المندوب', 'success'); closeModal('addCourier'); loadCouriers(); loadDashboard(); }
+  btn.disabled=false; btn.textContent='💾 حفظ المندوب';
+};
+
+window.openProfile = function(id) {
+  const c = allCouriers.find(x=>x.id===id);
+  if(!c) return;
+  document.getElementById('profileContent').innerHTML = `
+    <div class="profile-header">
+      <div class="profile-avatar">${getInitials(c.name)}</div>
+      <div style="flex:1">
+        <div class="profile-name">${c.name}</div>
+        <div class="profile-meta" style="display:flex;align-items:center;gap:8px">${c.phone||''} ${c.phone?`<a href="https://wa.me/2${c.phone.replace(/^0/,'')}" target="_blank" style="background:#25D366;color:white;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none">💬 واتساب</a>`:''}</div>
+        <span class="profile-badge">🏢 ${c.branch||''} ${c.area?'— '+c.area:''}</span>
+        <span class="profile-badge">${c.status==='نشط'?'✅ نشط':c.status==='موقوف'?'🔴 موقوف':'🟡 تدريب'}</span>
+      </div>
+      <div style="text-align:center"><div class="stars" style="direction:ltr;justify-content:center">${starsHtml(c.avg_rating||0,18)}</div><div style="font-size:13px;opacity:0.85;margin-top:4px">${(c.avg_rating||0).toFixed(1)} / 5</div></div>
+    </div>
+    <div class="profile-body">
+      <div class="form-section" style="margin-top:0">البيانات الأساسية</div>
+      <div class="profile-grid">
+        <div class="info-item"><div class="info-item-label">رقم البطاقة</div><div class="info-item-value">${c.nat_id||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">تاريخ الميلاد</div><div class="info-item-value">${c.dob||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">رقم الطوارئ</div><div class="info-item-value">${c.emergency||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">سكور الإنترفيو</div><div class="info-item-value" style="color:var(--red)">${c.interview_score||'--'}</div></div>
+      </div>
+      <div class="form-section">الوثائق</div>
+      <div class="profile-grid">
+        <div class="info-item"><div class="info-item-label">إيصال الأمانة</div><div class="info-item-value" style="color:${c.doc_receipt==='تم التوقيع'?'var(--green)':'var(--amber)'}">${c.doc_receipt==='تم التوقيع'?'✅':'⏳'} ${c.doc_receipt||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">إقرار الشنط</div><div class="info-item-value" style="color:${c.doc_bags==='تم التوقيع'?'var(--green)':'var(--amber)'}">${c.doc_bags==='تم التوقيع'?'✅':'⏳'} ${c.doc_bags||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">الأوراق</div><div class="info-item-value" style="color:${c.doc_papers==='مكتملة'?'var(--green)':'var(--amber)'}">${c.doc_papers==='مكتملة'?'✅':'⏳'} ${c.doc_papers||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">التيشيرت والصندوق</div><div class="info-item-value" style="color:${c.doc_uniform==='تم الاستلام'?'var(--green)':'var(--amber)'}">${c.doc_uniform==='تم الاستلام'?'✅':'⏳'} ${c.doc_uniform||'--'}</div></div>
+      </div>
+      <div class="form-section">السجل المالي</div>
+      <div class="profile-grid">
+        <div class="info-item"><div class="info-item-label">السلف</div><div class="info-item-value" style="color:${c.loans>0?'var(--amber)':'var(--green)'}">${c.loans||0} ج</div></div>
+        <div class="info-item"><div class="info-item-label">العمولة</div><div class="info-item-value" style="color:var(--green)">${c.commission||0} ج</div></div>
+        <div class="info-item"><div class="info-item-label">تاريخ الانضمام</div><div class="info-item-value">${formatDate(c.created_at)}</div></div>
+        <div class="info-item"><div class="info-item-label">HR Code</div><div class="info-item-value">${c.hr_code||'--'}</div></div>
+      </div>
+    </div>`;
+  openModal('profile');
+};
+
+// RATINGS
+async function loadRatings() {
+  const {data} = await sb.from('ratings').select('*').order('created_at',{ascending:false});
+  const ratings = data||[];
+  const tbody = document.getElementById('ratingsTable');
+  const labels = {5:'ممتاز',4:'جيد جداً',3:'متوسط',2:'ضعيف',1:'سيئ'};
+  const badgeC = {5:'badge-green',4:'badge-green',3:'badge-amber',2:'badge-amber',1:'badge-red'};
+  if(!ratings.length) { tbody.innerHTML = '<tr><td colspan="10"><div class="empty"><div class="empty-icon">⭐</div><div>لا يوجد تقييمات</div></div></td></tr>'; return; }
+  tbody.innerHTML = ratings.map(r=>`<tr>
+    <td><div class="courier-info"><div class="courier-avatar">${getInitials(r.courier_name||'؟')}</div><div style="font-weight:700">${r.courier_name||'--'}</div></div></td>
+    <td><span class="badge ${badgeC[r.attendance]||'badge-gray'}">${labels[r.attendance]||'--'}</span></td>
+    <td><span class="badge ${badgeC[r.uniform]||'badge-gray'}">${labels[r.uniform]||'--'}</span></td>
+    <td><span class="badge ${badgeC[r.clients]||'badge-gray'}">${labels[r.clients]||'--'}</span></td>
+    <td><span class="badge ${badgeC[r.group_behavior]||'badge-gray'}">${labels[r.group_behavior]||'--'}</span></td>
+    <td><span class="badge ${badgeC[r.payment]||'badge-gray'}">${labels[r.payment]||'--'}</span></td>
+    <td><span class="badge ${badgeC[r.update_score]||'badge-gray'}">${labels[r.update_score]||'--'}</span></td>
+    <td><span class="badge ${badgeC[r.branch_score]||'badge-gray'}">${labels[r.branch_score]||'--'}</span></td>
+    <td><div class="stars">${starsHtml(r.avg_score||0)}<span class="stars-score">${(r.avg_score||0).toFixed(1)}</span></div></td>
+    <td style="font-size:11px;color:var(--gray-400)">${formatDate(r.created_at)}</td>
+  </tr>`).join('');
+}
+
+window.selOpt = function(btn, score, key) {
+  btn.closest('[data-key]').querySelectorAll('.rating-opt').forEach(b=>b.className='rating-opt');
+  btn.classList.add('sel-'+score);
+  ratingScores[key] = score;
+  const vals = Object.values(ratingScores);
+  const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+  document.querySelectorAll('#finalStars .star').forEach((s,i)=>s.classList.toggle('on',i<Math.round(avg)));
+  document.getElementById('finalScoreText').textContent = vals.length ? `${avg.toFixed(1)} من 5 (${vals.length}/7 معايير)` : 'اختار التقييم لكل المعايير';
+};
+
+window.saveRating = async function() {
+  const courierId = document.getElementById('r_courier').value;
+  const courierName = document.getElementById('r_courier').selectedOptions[0]?.text.split(' — ')[0];
+  const keys = ['attendance','uniform','clients','group','payment','update','branch'];
+  if(keys.some(k=>!ratingScores[k])) { showToast('من فضلك اختار تقييم لكل المعايير','error'); return; }
+  const btn = document.getElementById('saveRatingBtn');
+  btn.disabled=true; btn.textContent='جاري الحفظ...';
+  const vals = keys.map(k=>ratingScores[k]);
+  const avg_score = vals.reduce((a,b)=>a+b,0)/vals.length;
+  const {error} = await sb.from('ratings').insert({
+    courier_id:courierId, courier_name:courierName,
+    attendance:ratingScores.attendance, uniform:ratingScores.uniform,
+    clients:ratingScores.clients, group_behavior:ratingScores.group,
+    payment:ratingScores.payment, update_score:ratingScores.update,
+    branch_score:ratingScores.branch, avg_score
+  });
+  if(!error) {
+    const {data:allR} = await sb.from('ratings').select('avg_score').eq('courier_id',courierId);
+    const newAvg = allR.reduce((s,r)=>s+(r.avg_score||0),0)/allR.length;
+    await sb.from('couriers').update({avg_rating:newAvg}).eq('id',courierId);
+    showToast('✅ تم حفظ التقييم','success');
+    closeModal('addRating'); ratingScores={};
+    document.querySelectorAll('.rating-opt').forEach(b=>b.className='rating-opt');
+    loadRatings(); loadCouriers(); loadDashboard();
+  } else showToast('❌ '+error.message,'error');
+  btn.disabled=false; btn.textContent='💾 حفظ التقييم';
+};
+
+// REQUESTS
+async function loadRequests() {
+  const {data} = await sb.from('requests').select('*').order('created_at',{ascending:false});
+  allRequests = data||[];
+  document.getElementById('reqBadge').textContent = allRequests.filter(r=>r.status==='معلق').length;
+  renderRequests();
+}
+
+function renderRequests() {
+  const list = currentReqTab==='all'?allRequests:allRequests.filter(r=>r.type===currentReqTab);
+  const el = document.getElementById('requestsList');
+  if(!list.length) { el.innerHTML='<div class="empty"><div class="empty-icon">📩</div><div>لا يوجد طلبات</div></div>'; return; }
+  el.innerHTML = list.map(r=>`
+    <div class="req-card">
+      <div class="req-icon ${r.type==='complaint'?'complaint':r.type==='suggestion'?'suggestion':'loan'}">${r.type==='loan'?'💰':r.type==='complaint'?'⚠️':'💡'}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="font-weight:700;font-size:14px">${r.type==='loan'?'طلب سلفة':r.type==='complaint'?'شكوى':'اقتراح'} — ${r.courier_name}</div>
+          <span class="badge ${r.status==='معلق'?'badge-amber':r.status==='مقبول'?'badge-green':'badge-red'}">${r.status}</span>
+        </div>
+        <div style="font-size:13px;color:var(--gray-600);margin-top:6px">${r.details||''}${r.amount?' | المبلغ: <strong>'+r.amount+' ج</strong>':''}</div>
+        ${r.status==='معلق'?`<div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-primary btn-sm" onclick="updateReqStatus('${r.id}','مقبول')">✅ قبول</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--red)" onclick="updateReqStatus('${r.id}','مرفوض')">❌ رفض</button>
+        </div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+window.updateReqStatus = async function(id,status) {
+  await sb.from('requests').update({status}).eq('id',id);
+  showToast(status==='مقبول'?'✅ تم القبول':'❌ تم الرفض',status==='مقبول'?'success':'');
+  loadRequests(); loadDashboard();
+};
+
+window.switchReqTab = function(btn,tab) {
+  document.querySelectorAll('#page-requests .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active'); currentReqTab=tab; renderRequests();
+};
+
+window.saveRequest = async function() {
+  const courierId = document.getElementById('req_courier').value;
+  const courierName = document.getElementById('req_courier').selectedOptions[0]?.text.split(' — ')[0];
+  const type = document.getElementById('req_type').value;
+  const details = document.getElementById('req_details').value.trim();
+  const amount = type==='loan'?Number(document.getElementById('req_amount').value):null;
+  if(!details) { showToast('من فضلك اكتب التفاصيل','error'); return; }
+  if(type==='loan'&&!amount) { showToast('من فضلك اكتب مبلغ السلفة','error'); return; }
+  if(type==='loan') {
+    const courier = allCouriers.find(c=>c.id===courierId);
+    if(courier&&amount>(courier.commission||0)) { showToast(`❌ المبلغ أكبر من العمولة (${courier.commission||0} ج)`,'error'); return; }
+  }
+  const btn = document.getElementById('saveRequestBtn');
+  btn.disabled=true; btn.textContent='جاري الإرسال...';
+  const {error} = await sb.from('requests').insert({courier_id:courierId,courier_name:courierName,type,details,amount,status:'معلق'});
+  if(!error) { showToast('✅ تم إرسال الطلب','success'); closeModal('addRequest'); loadRequests(); loadDashboard(); }
+  else showToast('❌ '+error.message,'error');
+  btn.disabled=false; btn.textContent='💾 إرسال الطلب';
+};
+
+window.toggleLoanField = function() {
+  document.getElementById('loanAmountGroup').style.display = document.getElementById('req_type').value==='loan'?'flex':'none';
+};
+
+// HIRING
+async function loadHiring() {
+  const {data:applicants} = await sb.from('applicants').select('*');
+  const stages=['استمارة مقدمة','إنترفيو وتقييم','استعلام أمني','توقيع وإعداد'];
+  const colors=['var(--red-muted)','#FFF7ED','#EFF6FF','var(--green-bg)'];
+  const textColors=['var(--red)','var(--amber)','var(--blue)','var(--green)'];
+  const icons=['📋','🎯','🔍','📝'];
+  const badgeClasses=['badge-red','badge-amber','badge-blue','badge-green'];
+  document.getElementById('hiringBoard').innerHTML = stages.map((stage,i)=>{
+    const stageApps=(applicants||[]).filter(a=>a.stage===stage);
+    return `<div class="card"><div class="card-header" style="background:${colors[i]}"><div class="card-title" style="font-size:13px;color:${textColors[i]}">${icons[i]} ${stage}</div><span class="badge ${badgeClasses[i]}">${stageApps.length}</span></div>
+    <div style="padding:12px">${stageApps.length?stageApps.map(a=>`<div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:10px;margin-bottom:8px"><div style="font-weight:700;font-size:13px">${a.name}</div><div style="font-size:11px;color:var(--gray-400)">${a.area||''} | سكور: ${a.hr_score||'--'}</div></div>`).join(''):'<div style="color:var(--gray-400);font-size:12px;text-align:center;padding:12px">لا يوجد</div>'}</div></div>`;
+  }).join('');
+}
+
+// APPLICANTS
+async function loadApplicants() {
+  const {data} = await sb.from('applicants').select('*').order('created_at',{ascending:false});
+  allApplicants = data||[];
+  document.getElementById('appBadge').textContent = allApplicants.filter(a=>a.status==='جديد').length;
+  renderApplicants();
+}
+
+function renderApplicants() {
+  const list = currentAppTab==='all'?allApplicants:allApplicants.filter(a=>a.status===currentAppTab);
+  const el = document.getElementById('applicantsList');
+  if(!list.length) { el.innerHTML='<div class="empty"><div class="empty-icon">📝</div><div>لا يوجد تقديمات</div></div>'; return; }
+  el.innerHTML = list.map(a=>`
+    <div class="card" style="margin-bottom:12px"><div style="padding:16px 20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="courier-avatar" style="background:var(--blue)">${(a.name||'؟').substring(0,2)}</div>
+          <div><div style="font-weight:800;font-size:14px">${a.name||'--'}</div><div style="font-size:11px;color:var(--gray-400)">${a.app_code||''} | ${a.phone1||''}</div></div>
+        </div>
+        <span class="badge ${a.status==='مقبول'?'badge-green':a.status==='مرفوض'?'badge-red':'badge-amber'}">${a.status||'جديد'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px">
+        <div style="background:var(--gray-50);border-radius:6px;padding:8px;border:1px solid var(--gray-200)"><div style="font-size:10px;color:var(--gray-400);font-weight:700">الرقم القومي</div><div style="font-size:12px;font-weight:700;direction:ltr">${a.nat_id||'--'}</div></div>
+        <div style="background:var(--gray-50);border-radius:6px;padding:8px;border:1px solid var(--gray-200)"><div style="font-size:10px;color:var(--gray-400);font-weight:700">المنطقة</div><div style="font-size:12px;font-weight:700">${a.area||'--'}</div></div>
+        <div style="background:var(--gray-50);border-radius:6px;padding:8px;border:1px solid var(--gray-200)"><div style="font-size:10px;color:var(--gray-400);font-weight:700">المركبة</div><div style="font-size:12px;font-weight:700">${a.vehicle||'--'}</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-outline btn-sm" onclick="viewApplicant('${a.id}')">👁️ عرض الكل</button>
+        ${a.status==='جديد'?`<button class="btn btn-primary btn-sm" onclick="updateAppStatus('${a.id}','مقبول')">✅ قبول</button><button class="btn btn-outline btn-sm" style="color:var(--red)" onclick="updateAppStatus('${a.id}','مرفوض')">❌ رفض</button>`:''}
+      </div>
+    </div></div>`).join('');
+}
+
+window.updateAppStatus = async function(id,status) {
+  await sb.from('applicants').update({status}).eq('id',id);
+  showToast(status==='مقبول'?'✅ تم القبول':'❌ تم الرفض',status==='مقبول'?'success':'');
+  loadApplicants();
+};
+
+window.switchAppTab = function(btn,tab) {
+  document.querySelectorAll('#page-applicants .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active'); currentAppTab=tab; renderApplicants();
+};
+
+function showApplicantProfile(a) {
+  document.getElementById('appDetailContent').innerHTML = `
+    <div class="profile-header">
+      <div class="profile-avatar">${(a.name||'؟').substring(0,2)}</div>
+      <div style="flex:1"><div class="profile-name">${a.name||'--'}</div>
+        <div class="profile-meta" style="display:flex;align-items:center;gap:8px">${a.phone1||''} ${a.phone1?`<a href="https://wa.me/2${a.phone1.replace(/^0/,'')}" target="_blank" style="background:#25D366;color:white;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none">💬 واتساب</a>`:''}</div>
+        <span class="profile-badge">HR: ${a.hr_name||'--'}</span>
+        <span class="profile-badge">${a.interview_result||'جديد'}</span>
+      </div>
+    </div>
+    <div class="profile-body">
+      <div class="form-section" style="margin-top:0">البيانات الشخصية</div>
+      <div class="profile-grid">
+        <div class="info-item"><div class="info-item-label">الرقم القومي</div><div class="info-item-value" style="direction:ltr">${a.nat_id||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">الموبايل الثاني</div><div class="info-item-value">${a.phone2||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">الحالة الاجتماعية</div><div class="info-item-value">${a.marital||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">التجنيد</div><div class="info-item-value">${a.military||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">المؤهل</div><div class="info-item-value">${a.education||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">نوع الهاتف</div><div class="info-item-value">${a.phone_type||'--'}</div></div>
+      </div>
+      <div class="form-section">السكن</div>
+      <div class="profile-grid">
+        <div class="info-item" style="grid-column:1/-1"><div class="info-item-label">عنوان البطاقة</div><div class="info-item-value">${a.card_address||'--'}</div></div>
+        <div class="info-item" style="grid-column:1/-1"><div class="info-item-label">العنوان الحالي</div><div class="info-item-value">${a.current_address||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">المنطقة</div><div class="info-item-value">${a.area||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">علامة مميزة</div><div class="info-item-value">${a.landmark||'--'}</div></div>
+      </div>
+      <div class="form-section">المركبة والخبرة</div>
+      <div class="profile-grid">
+        <div class="info-item"><div class="info-item-label">المركبة</div><div class="info-item-value">${a.vehicle||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">رخصة قيادة</div><div class="info-item-value">${a.has_license||'--'}</div></div>
+        <div class="info-item" style="grid-column:1/-1"><div class="info-item-label">الزونات الأساسية</div><div class="info-item-value">${a.zones1||'--'}</div></div>
+        <div class="info-item" style="grid-column:1/-1"><div class="info-item-label">خبرة سابقة</div><div class="info-item-value">${a.experience||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">عمل في تليجراف</div><div class="info-item-value">${a.worked_before||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">أقارب في تليجراف</div><div class="info-item-value">${a.has_relatives||'--'}</div></div>
+      </div>
+      <div class="form-section">بيانات الطوارئ</div>
+      <div class="profile-grid">
+        <div class="info-item"><div class="info-item-label">رقم الطوارئ</div><div class="info-item-value">${a.emergency||'--'}</div></div>
+        <div class="info-item"><div class="info-item-label">درجة القرابة</div><div class="info-item-value">${a.relation||'--'}</div></div>
+      </div>
+      <div class="form-section">بيانات HR</div>
+      <div class="form-grid" style="margin-bottom:16px">
+        <div class="form-group"><label class="form-label">الاسكور</label><input class="form-input" id="hr_score" type="number" placeholder="0-100" value="${a.hr_score||''}"></div>
+        <div class="form-group"><label class="form-label">تقييم المقابلة</label>
+          <select class="form-input" id="hr_result">
+            <option value="">-- اختار --</option>
+            <option ${a.interview_result==='Accepted - Started Work'?'selected':''}>Accepted - Started Work</option>
+            <option ${a.interview_result==='Accepted - Pending'?'selected':''}>Accepted - Pending</option>
+            <option ${a.interview_result==='Rejected'?'selected':''}>Rejected</option>
+            <option ${a.interview_result==='No Show'?'selected':''}>No Show</option>
+            <option ${a.interview_result==='Postponed'?'selected':''}>Postponed</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">العمولة (جنيه)</label><input class="form-input" id="hr_commission" type="number" value="${a.hr_commission||''}"></div>
+        <div class="form-group"><label class="form-label">كود المندوب</label><input class="form-input" id="hr_code" type="text" value="${a.courier_code||''}"></div>
+        <div class="form-group"><label class="form-label">القطاع / الفرع</label><input class="form-input" id="hr_sector" type="text" value="${a.sector||''}"></div>
+        <div class="form-group"><label class="form-label">تاريخ المقابلة</label><input class="form-input" id="hr_date" type="date" value="${a.interview_date||''}"></div>
+        <div class="form-group"><label class="form-label">تمت بواسطة</label><input class="form-input" id="hr_by" type="text" value="${a.interviewed_by||''}"></div>
+        <div class="form-group"><label class="form-label">رقم بوليصة الاستعلام</label><input class="form-input" id="hr_inquiry" type="text" value="${a.inquiry_no||''}"></div>
+        <div class="form-group full"><label class="form-label">ملحوظة</label><textarea class="form-input" id="hr_notes" rows="2">${a.hr_notes||''}</textarea></div>
+        <div class="form-group full"><label class="form-label">ملحوظة أخرى</label><textarea class="form-input" id="hr_notes2" rows="2">${a.hr_notes2||''}</textarea></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="saveHRFromProfile('${a.id}')">💾 حفظ بيانات HR</button>
+    </div>`;
+}
+
+window.viewApplicant = function(id) {
+  const a = allApplicants.find(x=>x.id===id);
+  if(!a) return;
+  showApplicantProfile(a); openModal('appDetail');
+};
+
+window.saveHRFromProfile = async function(id) {
+  const {error} = await sb.from('applicants').update({
+    hr_score: document.getElementById('hr_score').value?Number(document.getElementById('hr_score').value):null,
+    interview_result: document.getElementById('hr_result').value,
+    hr_commission: document.getElementById('hr_commission').value?Number(document.getElementById('hr_commission').value):null,
+    courier_code: document.getElementById('hr_code').value,
+    sector: document.getElementById('hr_sector').value,
+    interview_date: document.getElementById('hr_date').value,
+    interviewed_by: document.getElementById('hr_by').value,
+    inquiry_no: document.getElementById('hr_inquiry').value,
+    hr_notes: document.getElementById('hr_notes').value,
+    hr_notes2: document.getElementById('hr_notes2').value,
+  }).eq('id',id);
+  if(!error) { showToast('✅ تم حفظ بيانات HR','success'); closeModal('appDetail'); loadApplicants(); }
+  else showToast('❌ '+error.message,'error');
+};
+
+// HR TRACKER
+const HR_TEAM = { 'sarah': { name:'Sarah', phone:'1109806781' } };
+
+async function loadHRTracker() {
+  const {data} = await sb.from('applicants').select('*').order('created_at',{ascending:false});
+  allApplicantsHR = data||[];
+  renderHRTracker();
+}
+
+function getHRName(phone) {
+  if(!phone) return '';
+  const n = phone.replace(/\D/g,'').replace(/^0/,'').replace(/^20/,'');
+  const m = Object.values(HR_TEAM).find(v=>{ const p=v.phone.replace(/\D/g,''); return p===n||p.endsWith(n)||n.endsWith(p); });
+  return m?m.name:'';
+}
+
+function renderHRTracker() {
+  let list = allApplicantsHR;
+  if(currentHRTab!=='all') {
+    const hr = HR_TEAM[currentHRTab];
+    list = allApplicantsHR.filter(a=>{
+      const rec=(a.recruiter||'').replace(/\D/g,'').replace(/^0/,'').replace(/^20/,'');
+      const hrp=hr.phone.replace(/\D/g,'');
+      return rec===hrp||hrp.endsWith(rec)||rec.endsWith(hrp);
+    });
+  }
+  const el = document.getElementById('hrContent');
+  if(!list.length) { el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div>لا يوجد مقابلات</div></div>'; return; }
+  el.innerHTML = `<div class="card"><div style="overflow-x:auto"><table style="min-width:1600px">
+    <thead><tr><th>#</th><th>الاسم</th><th>الرقم القومي</th><th>الموبايل</th><th>HR</th><th>المنطقة</th><th>المركبة</th><th>الرخصة</th><th>الزونات</th><th>سبق تليجراف</th><th>الاسكور</th><th>تقييم المقابلة</th><th>العمولة</th><th>كود المندوب</th><th>القطاع</th><th>تاريخ المقابلة</th><th>ملحوظة</th><th>إجراء</th></tr></thead>
+    <tbody>${list.map((a,i)=>`<tr id="hr-row-${a.id}">
+      <td style="font-weight:700;color:var(--gray-400)">${i+1}</td>
+      <td><button onclick="viewApplicantHR('${a.id}')" style="background:none;border:none;font-weight:800;color:var(--red);cursor:pointer;font-family:Cairo,sans-serif;font-size:13px;text-decoration:underline">${a.name||'--'}</button></td>
+      <td style="font-size:11px;direction:ltr">${a.nat_id||'--'}</td>
+      <td>${a.phone1||'--'}</td>
+      <td style="font-weight:700;color:var(--blue)">${a.hr_name||getHRName(a.recruiter)||'--'}</td>
+      <td>${a.area||'--'}</td><td>${a.vehicle||'--'}</td><td>${a.has_license||'--'}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.zones1||'--'}</td>
+      <td>${a.worked_before||'--'}</td>
+      <td><input type="number" class="form-input" style="width:70px;padding:4px 6px;font-size:12px" value="${a.hr_score||''}"></td>
+      <td><select class="form-input" style="width:160px;padding:4px 6px;font-size:12px">
+        <option value="">-- اختار --</option>
+        <option ${a.interview_result==='Accepted - Started Work'?'selected':''}>Accepted - Started Work</option>
+        <option ${a.interview_result==='Accepted - Pending'?'selected':''}>Accepted - Pending</option>
+        <option ${a.interview_result==='Rejected'?'selected':''}>Rejected</option>
+        <option ${a.interview_result==='No Show'?'selected':''}>No Show</option>
+        <option ${a.interview_result==='Postponed'?'selected':''}>Postponed</option>
+      </select></td>
+      <td><input type="number" class="form-input" style="width:80px;padding:4px 6px;font-size:12px" value="${a.hr_commission||''}"></td>
+      <td><input type="text" class="form-input" style="width:110px;padding:4px 6px;font-size:12px" value="${a.courier_code||''}"></td>
+      <td><input type="text" class="form-input" style="width:100px;padding:4px 6px;font-size:12px" value="${a.sector||''}"></td>
+      <td><input type="date" class="form-input" style="width:135px;padding:4px 6px;font-size:12px" value="${a.interview_date||''}"></td>
+      <td><input type="text" class="form-input" style="width:150px;padding:4px 6px;font-size:12px" value="${a.hr_notes||''}"></td>
+      <td><button class="btn btn-primary btn-sm" onclick="saveHRRow('${a.id}')" style="white-space:nowrap">💾 حفظ</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div></div>`;
+}
+
+window.viewApplicantHR = function(id) {
+  const a = allApplicantsHR.find(x=>x.id===id);
+  if(!a) return;
+  showApplicantProfile(a); openModal('appDetail');
+};
+
+window.switchHRTab = function(btn,tab) {
+  document.querySelectorAll('#page-hrtracker .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active'); currentHRTab=tab; renderHRTracker();
+};
+
+window.saveHRRow = async function(id) {
+  const row = document.getElementById('hr-row-'+id);
+  const inputs = row.querySelectorAll('input, select');
+  const {error} = await sb.from('applicants').update({
+    hr_score:inputs[0].value?Number(inputs[0].value):null,
+    interview_result:inputs[1].value,
+    hr_commission:inputs[2].value?Number(inputs[2].value):null,
+    courier_code:inputs[3].value, sector:inputs[4].value,
+    interview_date:inputs[5].value, hr_notes:inputs[6].value,
+  }).eq('id',id);
+  if(!error) { showToast('✅ تم الحفظ','success'); loadHRTracker(); }
+  else showToast('❌ '+error.message,'error');
+};
+
+// BRANCHES
+const BRANCHES_DATA = [
+  { name:'Cairo', nameAr:'القاهرة', manager:'Hadeer Hany', phone:'01101501707', email:'hadeer.hany@telegraphex.com', address:'25 ش سمير عبد الرؤوف - مكرم عبيد', location:'https://maps.google.com/?q=30.051583,31.346419' },
+  { name:'Moassaet elzaka', nameAr:'مؤسسة الزكاة', manager:'Hadeer Hany', phone:'01101501707', email:'hadeer.hany@telegraphex.com', address:'شارع علي ندا - مؤسسة الزكاة', location:'https://maps.app.goo.gl/gvfdRzeBS7XvCC8B9' },
+  { name:'Gesr elsuez', nameAr:'جسر السويس', manager:'Ahmed Selim', phone:'01111018947', email:'ahmed.selim@telegraphex.com', address:'٣ شارع العدالة - أرض ميدو جسر السويس', location:'https://maps.google.com/?q=30.137056,31.381528' },
+  { name:'Nasr City', nameAr:'مدينة نصر', manager:'Eman Mohamed', phone:'01101009301', email:'eman.mohamed@telegraphex.com', address:'7 عمارات امتداد رمسيس - بجوار نادي السكة', location:'https://www.google.com/maps?q=30.0582218,31.3048486' },
+  { name:'Maadi', nameAr:'المعادي', manager:'Hassan Reda', phone:'01109806379', email:'hassan.reda@telegraphex.com', address:'المعادى 43 عمارات صقر قريش', location:'https://maps.google.com/?q=29.984833,31.287778' },
+  { name:'Giza', nameAr:'الجيزة', manager:'Youssef Ahmed', phone:'01109679431', email:'youssef.ahmed@telegraphex.com', address:'شارع الجمل متفرع من شارع الملك فيصل', location:'https://maps.google.com/?q=30.012109,31.196337' },
+  { name:'Alex', nameAr:'الإسكندرية', manager:'Abdallah Osman', phone:'01110071290', email:'abdullah.othman@telegraphex.com', address:'أبيس بعد جولدز جيم / 71 ش سيدي جابر الشيخ', location:'https://www.google.com/maps?q=31.199825,30.023542' },
+];
+
+function loadBranches() {
+  document.getElementById('branchesGrid').innerHTML = BRANCHES_DATA.map(b=>`
+    <div class="card" style="overflow:hidden">
+      <div style="background:var(--red);padding:16px 20px;color:white"><div style="font-size:16px;font-weight:900">${b.nameAr}</div><div style="font-size:12px;opacity:0.85">${b.name}</div></div>
+      <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--red-muted);display:flex;align-items:center;justify-content:center;flex-shrink:0">👤</div><div><div style="font-size:11px;color:var(--gray-400);font-weight:700">مدير الفرع</div><div style="font-weight:800;font-size:14px">${b.manager}</div></div></div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:#F0FDF4;display:flex;align-items:center;justify-content:center;flex-shrink:0">📱</div><div><div style="font-size:11px;color:var(--gray-400);font-weight:700">الموبايل</div><div style="font-weight:700;display:flex;align-items:center;gap:6px">${b.phone} <a href="https://wa.me/2${b.phone.replace(/^0/,'')}" target="_blank" style="background:#25D366;color:white;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none">💬</a></div></div></div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0">✉️</div><div><div style="font-size:11px;color:var(--gray-400);font-weight:700">الإيميل</div><div style="font-weight:700;font-size:12px">${b.email}</div></div></div>
+        <div style="display:flex;align-items:flex-start;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:#FFFBEB;display:flex;align-items:center;justify-content:center;flex-shrink:0">📍</div><div><div style="font-size:11px;color:var(--gray-400);font-weight:700">العنوان</div><div style="font-weight:600;font-size:12px;line-height:1.6">${b.address}</div></div></div>
+        <a href="${b.location}" target="_blank" class="btn btn-outline" style="width:100%;justify-content:center;text-decoration:none">🗺️ فتح في الخرايط</a>
+      </div>
+    </div>`).join('');
+}
+
+// NAV
+window.showPage = function(page,btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  if(page==='dashboard') loadDashboard();
+  if(page==='couriers') loadCouriers();
+  if(page==='rating') { loadRatings(); loadCouriers(); }
+  if(page==='requests') { loadRequests(); loadCouriers(); }
+  if(page==='hiring') loadHiring();
+  if(page==='applicants') loadApplicants();
+  if(page==='hrtracker') loadHRTracker();
+  if(page==='branches') loadBranches();
+};
+
+window.openModal = function(id) { document.getElementById('modal-'+id).classList.add('open'); };
+window.closeModal = function(id) { document.getElementById('modal-'+id).classList.remove('open'); };
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',function(e){ if(e.target===this) this.classList.remove('open'); }));
+
+// INIT
+document.getElementById('currentUserName').textContent = 'مدير النظام';
+loadDashboard();
+loadCouriers();
+</script>
+</body>
+</html>
