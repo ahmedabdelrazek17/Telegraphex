@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegraphex — تسجيل الأخطاء | مدير العمليات</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: Arial, sans-serif; background:#f2f2f2; color:#222; direction:rtl; }
+
+.topbar { background:#E3251B; color:white; padding:14px 28px; display:flex; align-items:center; justify-content:space-between; }
+.topbar h1 { font-size:18px; font-weight:bold; }
+.topbar span { font-size:12px; opacity:0.85; }
+
+.container { max-width:900px; margin:24px auto; padding:0 16px; }
+
+.card { background:white; border-radius:10px; padding:22px 24px; margin-bottom:18px; box-shadow:0 2px 8px rgba(0,0,0,0.07); }
+.card-title { font-size:14px; font-weight:bold; color:#E3251B; margin-bottom:16px; padding-bottom:8px; border-bottom:2px solid #fdecea; }
+
+.grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+label { display:block; font-size:12px; color:#555; margin-bottom:5px; font-weight:bold; }
+input, select { width:100%; padding:10px 12px; border:1.5px solid #ddd; border-radius:7px; font-size:14px; font-family:Arial; direction:rtl; }
+input:focus, select:focus { outline:none; border-color:#E3251B; }
+
+.deduct-preview { background:#fdecea; color:#c62828; padding:10px 14px; border-radius:8px; font-size:14px; font-weight:bold; margin-top:12px; display:none; }
+.deduct-preview.show { display:block; }
+
+.btn { background:#E3251B; color:white; border:none; padding:13px; border-radius:8px; font-size:15px; font-weight:bold; cursor:pointer; width:100%; margin-top:14px; }
+.btn:hover { background:#b71c1c; }
+.btn-gray { background:#424242; }
+.btn-gray:hover { background:#212121; }
+
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+.stat-box { border-radius:9px; padding:16px 12px; text-align:center; }
+.stat-box .val { font-size:26px; font-weight:bold; }
+.stat-box .lbl { font-size:11px; color:#666; margin-top:4px; }
+
+.gray { background:#F5F5F5; } .red { background:#FDECEA; } .green { background:#E8F5E9; } .blue { background:#EBF3FB; }
+
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { background:#E3251B; color:white; padding:10px 12px; text-align:right; font-weight:bold; }
+td { padding:10px 12px; border-bottom:1px solid #eee; }
+tr:nth-child(even) td { background:#f9f9f9; }
+.deduct-badge { background:#fdecea; color:#c62828; padding:3px 10px; border-radius:10px; font-weight:bold; font-size:12px; white-space:nowrap; }
+.del-btn { background:none; border:none; color:#c62828; cursor:pointer; font-size:16px; padding:4px; }
+.del-btn:hover { color:#7f0000; }
+
+.empty { text-align:center; padding:40px; color:#999; font-size:14px; }
+
+.branch-select { background:#fff3e0; border:1.5px solid #ffb74d; border-radius:8px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
+.branch-select label { margin:0; font-size:14px; }
+.branch-select select { font-size:14px; font-weight:bold; }
+
+.employee-card { display:flex; align-items:center; gap:16px; }
+.employee-avatar { width:56px; height:56px; border-radius:50%; background:#fdecea; color:#E3251B; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold; flex-shrink:0; }
+.employee-info { flex:1; }
+.employee-info .emp-name { font-size:16px; font-weight:bold; }
+.employee-info .emp-title { font-size:12px; color:#888; margin-top:2px; }
+.employee-meta { display:flex; gap:18px; font-size:12px; color:#666; margin-top:8px; flex-wrap:wrap; }
+.employee-meta span b { color:#E3251B; }
+.edit-emp-btn { background:#424242; color:white; border:none; padding:8px 16px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; flex-shrink:0; }
+.edit-emp-btn:hover { background:#212121; }
+
+.emp-form { display:none; }
+.emp-form.show { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:14px; padding-top:14px; border-top:1px solid #eee; }
+.emp-form label { font-size:11px; }
+
+@media(max-width:680px){
+  .grid3, .stats-grid { grid-template-columns:1fr 1fr; }
+  .grid2 { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🚚 Telegraphex — تسجيل خصومات KPI | مدير العمليات</h1>
+  <span id="dateLabel"></span>
+</div>
+
+<div class="container">
+
+  <div class="branch-select">
+    <label>الفرع:</label>
+    <select id="branchSelect" onchange="changeBranch()">
+      <option value="الجيزة">فرع الجيزة</option>
+      <option value="القاهرة_المعادي">فرع القاهرة - المعادي</option>
+      <option value="القاهرة_نصر_سيتي">فرع القاهرة - نصر سيتي</option>
+      <option value="القاهرة_جسر_السويس">فرع القاهرة - جسر السويس</option>
+      <option value="الإسكندرية">فرع الإسكندرية</option>
+    </select>
+    <label style="margin-right:auto;">الشهر:</label>
+    <select id="monthSelect" onchange="changeBranch()">
+      <option value="2025-01">يناير 2025</option>
+      <option value="2025-02">فبراير 2025</option>
+      <option value="2025-03">مارس 2025</option>
+      <option value="2025-04">أبريل 2025</option>
+      <option value="2025-05">مايو 2025</option>
+      <option value="2025-06" selected>يونيو 2025</option>
+      <option value="2025-07">يوليو 2025</option>
+      <option value="2025-08">أغسطس 2025</option>
+      <option value="2025-09">سبتمبر 2025</option>
+      <option value="2025-10">أكتوبر 2025</option>
+      <option value="2025-11">نوفمبر 2025</option>
+      <option value="2025-12">ديسمبر 2025</option>
+    </select>
+  </div>
+
+  <!-- Employee Card -->
+  <div class="card">
+    <div class="employee-card">
+      <div class="employee-avatar" id="empAvatar">—</div>
+      <div class="employee-info">
+        <div class="emp-name" id="empName">—</div>
+        <div class="emp-title" id="empTitleDisplay">—</div>
+        <div class="employee-meta">
+          <span>الكود: <b id="empCodeDisplay">—</b></span>
+          <span>التليفون: <b id="empPhoneDisplay">—</b></span>
+        </div>
+      </div>
+      <button class="edit-emp-btn" onclick="toggleEmpForm()">✏️ تعديل البيانات</button>
+    </div>
+    <div class="emp-form" id="empForm">
+      <div>
+        <label>الاسم</label>
+        <input type="text" id="empNameInput" placeholder="اسم مدير الفرع">
+      </div>
+      <div>
+        <label>الوظيفة</label>
+        <input type="text" id="empTitleInput" placeholder="مدير فرع" value="مدير فرع">
+      </div>
+      <div>
+        <label>الكود</label>
+        <input type="text" id="empCodeInput" placeholder="BM-001">
+      </div>
+      <div>
+        <label>التليفون</label>
+        <input type="text" id="empPhoneInput" placeholder="01xxxxxxxxx">
+      </div>
+      <div style="grid-column:1/-1;">
+        <button class="btn" onclick="saveEmployee()" style="margin-top:0;">💾 حفظ البيانات</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Error Form -->
+  <div class="card">
+    <div class="card-title">➕ تسجيل خطأ جديد</div>
+    <div class="grid2">
+      <div>
+        <label>التاريخ</label>
+        <input type="date" id="errDate">
+      </div>
+      <div>
+        <label>نوع الخطأ</label>
+        <select id="errType" onchange="updatePreview()"></select>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label>ملاحظة (اختياري)</label>
+      <input type="text" id="errNote" placeholder="تفاصيل إضافية عن الخطأ...">
+    </div>
+    <div class="deduct-preview" id="deductPreview"></div>
+    <button class="btn" onclick="addError()">➕ إضافة الخطأ</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-box gray">
+      <div class="val" id="statBase">1000</div>
+      <div class="lbl">النقاط الأساسية</div>
+    </div>
+    <div class="stat-box blue">
+      <div class="val" id="statCount">0</div>
+      <div class="lbl">عدد الأخطاء</div>
+    </div>
+    <div class="stat-box red">
+      <div class="val" id="statDeduct">0</div>
+      <div class="lbl">إجمالي الخصم</div>
+    </div>
+    <div class="stat-box green">
+      <div class="val" id="statFinal">1000</div>
+      <div class="lbl">النقاط النهائية</div>
+    </div>
+  </div>
+
+  <!-- Errors List -->
+  <div class="card">
+    <div class="card-title">📋 سجل أخطاء الشهر — <span id="branchTitle">الجيزة</span></div>
+    <table id="errTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>التاريخ</th>
+          <th>نوع الخطأ</th>
+          <th style="text-align:center;">الخصم</th>
+          <th>ملاحظة</th>
+          <th style="text-align:center;">حذف</th>
+        </tr>
+      </thead>
+      <tbody id="errBody"></tbody>
+    </table>
+    <div class="empty" id="emptyState">لا توجد أخطاء مسجلة لهذا الشهر — أداء ممتاز ✅</div>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://tpretakvzpjzxazahffq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcmV0YWt2enBqenhhemFoZmZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTM3NzIsImV4cCI6MjA5NjMyOTc3Mn0.JQZwOx6vECzZdGN3aLeZtGaT--0Ol3iuhoyiKeF1V_k';
+
+async function sbFetch(path, options = {}) {
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'application/json',
+    ...(options.headers || {})
+  };
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { ...options, headers });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`Supabase error ${res.status}: ${txt}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+const EVENTS = [
+  ["عدم التوريد البنكي", 80],
+  ["عدم إحضار البيك آب", 80],
+  ["عجز في الخزنة", 100],
+  ["غياب بدون إخطار", 80],
+  ["سوء التعامل مع المدير أو الزملاء", 100],
+  ["تأخر توزيع الشحنات", 15],
+  ["عدم تحصيل مندوب", 25],
+  ["شكوى لم تُحل في SLA", 20],
+  ["شكوى متكررة بدون إجراء", 20],
+  ["Pending بدون متابعة", 10],
+  ["تأخر التقرير الأسبوعي", 15],
+  ["عدم الرد على مدير العمليات", 10],
+  ["مندوب خرج من منطقته", 10],
+  ["نظافة الفرع غير مطابقة", 40],
+  ["عدم ارتداء اليونيفورم", 30],
+  ["بطاقة ID غير ظاهرة", 20],
+  ["أخرى", 0],
+];
+
+const BRANCH_NAMES = {
+  "الجيزة": "الجيزة",
+  "القاهرة_المعادي": "القاهرة - المعادي",
+  "القاهرة_نصر_سيتي": "القاهرة - نصر سيتي",
+  "القاهرة_جسر_السويس": "القاهرة - جسر السويس",
+  "الإسكندرية": "الإسكندرية",
+};
+
+let errors = [];
+
+document.getElementById('dateLabel').textContent =
+  new Date().toLocaleDateString('ar-EG', {year:'numeric', month:'long', day:'numeric'});
+
+const sel = document.getElementById('errType');
+EVENTS.forEach(([name, ded]) => {
+  const o = document.createElement('option');
+  o.value = name; o.dataset.ded = ded;
+  o.textContent = `${name} (-${ded} نقطة)`;
+  sel.appendChild(o);
+});
+
+document.getElementById('errDate').valueAsDate = new Date();
+
+async function loadEmployee() {
+  const branch = document.getElementById('branchSelect').value;
+  try {
+    const data = await sbFetch(`kpi_employees?branch=eq.${encodeURIComponent(branch)}&select=*`);
+    const emp = data && data.length ? data[0] : null;
+    if (emp) {
+      document.getElementById('empName').textContent = emp.name || '— لم يتم إضافة الاسم —';
+      document.getElementById('empTitleDisplay').textContent = emp.title || 'مدير فرع';
+      document.getElementById('empCodeDisplay').textContent = emp.code || '—';
+      document.getElementById('empPhoneDisplay').textContent = emp.phone || '—';
+      document.getElementById('empAvatar').textContent = emp.name ? emp.name[0] : '—';
+
+      document.getElementById('empNameInput').value = emp.name || '';
+      document.getElementById('empTitleInput').value = emp.title || 'مدير فرع';
+      document.getElementById('empCodeInput').value = emp.code || '';
+      document.getElementById('empPhoneInput').value = emp.phone || '';
+    } else {
+      document.getElementById('empName').textContent = '— لم يتم إضافة الاسم —';
+      document.getElementById('empTitleDisplay').textContent = 'مدير فرع';
+      document.getElementById('empCodeDisplay').textContent = '—';
+      document.getElementById('empPhoneDisplay').textContent = '—';
+      document.getElementById('empAvatar').textContent = '—';
+      document.getElementById('empNameInput').value = '';
+      document.getElementById('empTitleInput').value = 'مدير فرع';
+      document.getElementById('empCodeInput').value = '';
+      document.getElementById('empPhoneInput').value = '';
+    }
+  } catch(e) {
+    console.error(e);
+    document.getElementById('empName').textContent = '— خطأ في الاتصال —';
+  }
+}
+
+function toggleEmpForm() {
+  document.getElementById('empForm').classList.toggle('show');
+}
+
+async function saveEmployee() {
+  const branch = document.getElementById('branchSelect').value;
+  const emp = {
+    branch,
+    name: document.getElementById('empNameInput').value,
+    title: document.getElementById('empTitleInput').value,
+    code: document.getElementById('empCodeInput').value,
+    phone: document.getElementById('empPhoneInput').value,
+  };
+  try {
+    await sbFetch('kpi_employees', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify(emp)
+    });
+    await loadEmployee();
+    document.getElementById('empForm').classList.remove('show');
+  } catch(e) {
+    console.error(e);
+    alert('حدث خطأ في الحفظ — تحقق من الاتصال بالإنترنت');
+  }
+}
+
+function updatePreview() {
+  const opt = sel.options[sel.selectedIndex];
+  const ded = opt ? +opt.dataset.ded : 0;
+  const preview = document.getElementById('deductPreview');
+  if (ded > 0) {
+    preview.textContent = `⚠️ سيتم خصم ${ded} نقطة من إجمالي نقاط الشهر`;
+    preview.classList.add('show');
+  } else {
+    preview.classList.remove('show');
+  }
+}
+sel.addEventListener('change', updatePreview);
+updatePreview();
+
+async function loadErrors() {
+  const branch = document.getElementById('branchSelect').value;
+  const month = document.getElementById('monthSelect').value;
+  try {
+    errors = await sbFetch(`kpi_errors?branch=eq.${encodeURIComponent(branch)}&month=eq.${month}&order=date.asc&select=*`) || [];
+  } catch(e) {
+    console.error(e);
+    errors = [];
+  }
+  render();
+}
+
+function render() {
+  const body = document.getElementById('errBody');
+  const empty = document.getElementById('emptyState');
+  const table = document.getElementById('errTable');
+  const branchKey = document.getElementById('branchSelect').value;
+  document.getElementById('branchTitle').textContent = BRANCH_NAMES[branchKey];
+
+  if (errors.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+  } else {
+    table.style.display = 'table';
+    empty.style.display = 'none';
+  }
+
+  body.innerHTML = '';
+  errors.forEach((e) => {
+    const tr = document.createElement('tr');
+    const dateStr = new Date(e.date).toLocaleDateString('ar-EG', {day:'2-digit', month:'2-digit', year:'numeric'});
+    tr.innerHTML = `
+      <td style="font-weight:bold;">${dateStr}</td>
+      <td>${e.error_type}</td>
+      <td style="text-align:center;"><span class="deduct-badge">- ${e.deduction} نقطة</span></td>
+      <td style="color:#666; font-size:12px;">${e.note || '—'}</td>
+      <td style="text-align:center;"><button class="del-btn" data-id="${e.id}">🗑️</button></td>
+    `;
+    body.appendChild(tr);
+  });
+
+  document.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (confirm('متأكد من حذف هذا الخطأ؟')) {
+        try {
+          await sbFetch(`kpi_errors?id=eq.${btn.dataset.id}`, { method: 'DELETE' });
+          await loadErrors();
+        } catch(e) {
+          console.error(e);
+          alert('حدث خطأ في الحذف');
+        }
+      }
+    });
+  });
+
+  const totalDeduct = errors.reduce((s,e) => s + e.deduction, 0);
+  const finalScore = Math.max(0, 1000 - totalDeduct);
+
+  document.getElementById('statCount').textContent = errors.length;
+  document.getElementById('statDeduct').textContent = totalDeduct;
+  document.getElementById('statFinal').textContent = finalScore;
+}
+
+async function addError() {
+  const date = document.getElementById('errDate').value;
+  const opt = sel.options[sel.selectedIndex];
+  const type = opt.value;
+  const deduct = +opt.dataset.ded;
+  const note = document.getElementById('errNote').value;
+  const branch = document.getElementById('branchSelect').value;
+  const month = document.getElementById('monthSelect').value;
+
+  if (!date) { alert('من فضلك اختر التاريخ'); return; }
+
+  try {
+    await sbFetch('kpi_errors', {
+      method: 'POST',
+      body: JSON.stringify({ branch, month, date, error_type: type, deduction: deduct, note })
+    });
+    await loadErrors();
+    document.getElementById('errNote').value = '';
+  } catch(e) {
+    console.error(e);
+    alert('حدث خطأ في الحفظ — تحقق من الاتصال بالإنترنت');
+  }
+}
+
+function changeBranch() {
+  loadErrors();
+  loadEmployee();
+}
+
+loadErrors();
+loadEmployee();
+</body>
+</html>

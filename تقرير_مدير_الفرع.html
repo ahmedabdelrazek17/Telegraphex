@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegraphex — تقرير الأخطاء | مدير الفرع</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: Arial, sans-serif; background:#f2f2f2; color:#222; direction:rtl; }
+
+.topbar { background:#E3251B; color:white; padding:14px 28px; display:flex; align-items:center; justify-content:space-between; }
+.topbar h1 { font-size:18px; font-weight:bold; }
+.topbar span { font-size:12px; opacity:0.85; }
+
+.container { max-width:900px; margin:24px auto; padding:0 16px; }
+
+.card { background:white; border-radius:10px; padding:22px 24px; margin-bottom:18px; box-shadow:0 2px 8px rgba(0,0,0,0.07); }
+.card-title { font-size:14px; font-weight:bold; color:#E3251B; margin-bottom:16px; padding-bottom:8px; border-bottom:2px solid #fdecea; }
+
+.viewonly-banner { background:#EBF3FB; color:#1565C0; padding:12px 18px; border-radius:8px; font-size:13px; margin-bottom:18px; display:flex; align-items:center; gap:10px; }
+
+.branch-select { background:#fff3e0; border:1.5px solid #ffb74d; border-radius:8px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
+.branch-select label { margin:0; font-size:14px; font-weight:bold; }
+select { padding:8px 12px; border:1.5px solid #ddd; border-radius:7px; font-size:14px; font-family:Arial; direction:rtl; font-weight:bold; }
+
+.employee-card { display:flex; align-items:center; gap:16px; }
+.employee-avatar { width:56px; height:56px; border-radius:50%; background:#fdecea; color:#E3251B; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold; flex-shrink:0; }
+.employee-info { flex:1; }
+.employee-info .emp-name { font-size:18px; font-weight:bold; }
+.employee-info .emp-title { font-size:12px; color:#888; margin-top:2px; }
+.employee-meta { display:flex; gap:18px; font-size:13px; color:#666; margin-top:8px; flex-wrap:wrap; }
+.employee-meta span b { color:#E3251B; }
+
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+.stat-box { border-radius:9px; padding:18px 12px; text-align:center; }
+.stat-box .val { font-size:28px; font-weight:bold; }
+.stat-box .lbl { font-size:12px; color:#666; margin-top:4px; }
+
+.gray { background:#F5F5F5; } .red { background:#FDECEA; } .green { background:#E8F5E9; } .blue { background:#EBF3FB; }
+
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { background:#E3251B; color:white; padding:10px 12px; text-align:right; font-weight:bold; }
+td { padding:10px 12px; border-bottom:1px solid #eee; }
+tr:nth-child(even) td { background:#f9f9f9; }
+.deduct-badge { background:#fdecea; color:#c62828; padding:3px 10px; border-radius:10px; font-weight:bold; font-size:12px; white-space:nowrap; }
+
+.empty { text-align:center; padding:50px 20px; }
+.empty .icon { font-size:48px; margin-bottom:12px; }
+.empty .msg { font-size:15px; color:#2e7d32; font-weight:bold; }
+
+.btn { background:#424242; color:white; border:none; padding:13px; border-radius:8px; font-size:15px; font-weight:bold; cursor:pointer; width:100%; margin-top:14px; }
+.btn:hover { background:#212121; }
+
+/* Bracket result */
+.bracket-box { border-radius:10px; padding:20px; text-align:center; margin-top:8px; }
+.bracket-box .level { font-size:18px; font-weight:bold; margin-bottom:8px; }
+.bracket-box .detail { font-size:13px; color:#666; }
+
+.salary-breakdown { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px; }
+.sal-box { background:#f9f9f9; border-radius:8px; padding:14px; text-align:center; border:1.5px solid #eee; }
+.sal-box .s-val { font-size:18px; font-weight:bold; color:#424242; }
+.sal-box .s-lbl { font-size:11px; color:#888; margin-top:4px; }
+
+.total-box { background:#1B3A6B; border-radius:10px; padding:20px; text-align:center; margin-top:14px; }
+.total-box .t-lbl { color:#aac8f0; font-size:12px; margin-bottom:6px; }
+.total-box .t-val { color:white; font-size:32px; font-weight:bold; }
+
+.summary-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:14px; }
+.summary-item { background:#fff8e1; border-radius:8px; padding:10px; text-align:center; }
+.summary-item .s-num { font-size:20px; font-weight:bold; color:#E65100; }
+.summary-item .s-lbl { font-size:10px; color:#666; margin-top:3px; }
+
+@media(max-width:680px){
+  .stats-grid, .salary-breakdown, .summary-row { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📊 Telegraphex — تقرير الأداء | مدير الفرع</h1>
+  <span id="dateLabel"></span>
+</div>
+
+<div class="container">
+
+  <div class="viewonly-banner">
+    🔒 هذه الشاشة للعرض فقط — البيانات يسجلها مدير العمليات ولا يمكن التعديل عليها من هنا
+  </div>
+
+  <div class="branch-select">
+    <label>الفرع:</label>
+    <select id="branchSelect" onchange="loadErrors()">
+      <option value="الجيزة">فرع الجيزة</option>
+      <option value="القاهرة_المعادي">فرع القاهرة - المعادي</option>
+      <option value="القاهرة_نصر_سيتي">فرع القاهرة - نصر سيتي</option>
+      <option value="القاهرة_جسر_السويس">فرع القاهرة - جسر السويس</option>
+      <option value="الإسكندرية">فرع الإسكندرية</option>
+    </select>
+    <label style="margin-right:auto;">الشهر:</label>
+    <select id="monthSelect" onchange="loadErrors()">
+      <option value="2025-01">يناير 2025</option>
+      <option value="2025-02">فبراير 2025</option>
+      <option value="2025-03">مارس 2025</option>
+      <option value="2025-04">أبريل 2025</option>
+      <option value="2025-05">مايو 2025</option>
+      <option value="2025-06" selected>يونيو 2025</option>
+      <option value="2025-07">يوليو 2025</option>
+      <option value="2025-08">أغسطس 2025</option>
+      <option value="2025-09">سبتمبر 2025</option>
+      <option value="2025-10">أكتوبر 2025</option>
+      <option value="2025-11">نوفمبر 2025</option>
+      <option value="2025-12">ديسمبر 2025</option>
+    </select>
+  </div>
+
+  <!-- Employee Card -->
+  <div class="card">
+    <div class="employee-card">
+      <div class="employee-avatar" id="empAvatar">—</div>
+      <div class="employee-info">
+        <div class="emp-name" id="empName">—</div>
+        <div class="emp-title" id="empTitleDisplay">—</div>
+        <div class="employee-meta">
+          <span>الكود: <b id="empCodeDisplay">—</b></span>
+          <span>التليفون: <b id="empPhoneDisplay">—</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-box gray">
+      <div class="val" id="statBase">1000</div>
+      <div class="lbl">النقاط الأساسية</div>
+    </div>
+    <div class="stat-box blue">
+      <div class="val" id="statCount">0</div>
+      <div class="lbl">عدد الأخطاء</div>
+    </div>
+    <div class="stat-box red">
+      <div class="val" id="statDeduct">0</div>
+      <div class="lbl">إجمالي الخصم</div>
+    </div>
+    <div class="stat-box green">
+      <div class="val" id="statFinal">1000</div>
+      <div class="lbl">النقاط النهائية</div>
+    </div>
+  </div>
+
+  <!-- Bracket Result -->
+  <div class="card">
+    <div class="card-title">💰 الشريحة المحققة</div>
+    <div class="bracket-box" id="bracketBox">
+      <div class="level" id="bracketLevel">—</div>
+      <div class="detail" id="bracketDetail">—</div>
+    </div>
+    <div class="salary-breakdown">
+      <div class="sal-box">
+        <div class="s-val">8,000 ج</div>
+        <div class="s-lbl">الراتب الثابت</div>
+      </div>
+      <div class="sal-box">
+        <div class="s-val" id="kpiVal">— ج</div>
+        <div class="s-lbl">KPI</div>
+      </div>
+      <div class="sal-box">
+        <div class="s-val" id="bonusVal">— ج</div>
+        <div class="s-lbl">البونص</div>
+      </div>
+    </div>
+    <div class="total-box">
+      <div class="t-lbl">إجمالي الراتب المتوقع هذا الشهر</div>
+      <div class="t-val" id="totalVal">— ج</div>
+    </div>
+  </div>
+
+  <!-- Errors -->
+  <div class="card">
+    <div class="card-title">📋 سجل أخطاء الشهر — <span id="branchTitle">الجيزة</span></div>
+    <table id="errTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>التاريخ</th>
+          <th>نوع الخطأ</th>
+          <th style="text-align:center;">الخصم</th>
+          <th>ملاحظة مدير العمليات</th>
+        </tr>
+      </thead>
+      <tbody id="errBody"></tbody>
+    </table>
+    <div class="empty" id="emptyState">
+      <div class="icon">✅</div>
+      <div class="msg">لا توجد أخطاء مسجلة لهذا الشهر — أداء ممتاز!</div>
+    </div>
+
+    <!-- Top errors summary -->
+    <div class="summary-row" id="topErrors" style="display:none;"></div>
+
+    <button class="btn" onclick="downloadReport()">⬇️ تحميل تقرير الشهر (CSV)</button>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://tpretakvzpjzxazahffq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcmV0YWt2enBqenhhemFoZmZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTM3NzIsImV4cCI6MjA5NjMyOTc3Mn0.JQZwOx6vECzZdGN3aLeZtGaT--0Ol3iuhoyiKeF1V_k';
+
+async function sbFetch(path, options = {}) {
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'application/json',
+    ...(options.headers || {})
+  };
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { ...options, headers });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`Supabase error ${res.status}: ${txt}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+const BRANCH_NAMES = {
+  "الجيزة": "الجيزة",
+  "القاهرة_المعادي": "القاهرة - المعادي",
+  "القاهرة_نصر_سيتي": "القاهرة - نصر سيتي",
+  "القاهرة_جسر_السويس": "القاهرة - جسر السويس",
+  "الإسكندرية": "الإسكندرية",
+};
+
+const MONTH_NAMES = {
+  "2025-01":"يناير 2025","2025-02":"فبراير 2025","2025-03":"مارس 2025","2025-04":"أبريل 2025",
+  "2025-05":"مايو 2025","2025-06":"يونيو 2025","2025-07":"يوليو 2025","2025-08":"أغسطس 2025",
+  "2025-09":"سبتمبر 2025","2025-10":"أكتوبر 2025","2025-11":"نوفمبر 2025","2025-12":"ديسمبر 2025"
+};
+
+let errors = [];
+
+document.getElementById('dateLabel').textContent =
+  new Date().toLocaleDateString('ar-EG', {year:'numeric', month:'long', day:'numeric'});
+
+async function loadEmployee() {
+  const branch = document.getElementById('branchSelect').value;
+  try {
+    const data = await sbFetch(`kpi_employees?branch=eq.${encodeURIComponent(branch)}&select=*`);
+    const emp = data && data.length ? data[0] : null;
+    if (emp && emp.name) {
+      document.getElementById('empName').textContent = emp.name;
+      document.getElementById('empTitleDisplay').textContent = emp.title || 'مدير فرع';
+      document.getElementById('empCodeDisplay').textContent = emp.code || '—';
+      document.getElementById('empPhoneDisplay').textContent = emp.phone || '—';
+      document.getElementById('empAvatar').textContent = emp.name[0];
+    } else {
+      document.getElementById('empName').textContent = '—';
+      document.getElementById('empTitleDisplay').textContent = 'مدير فرع';
+      document.getElementById('empCodeDisplay').textContent = '—';
+      document.getElementById('empPhoneDisplay').textContent = '—';
+      document.getElementById('empAvatar').textContent = '—';
+    }
+  } catch(e) {
+    console.error(e);
+    document.getElementById('empName').textContent = '— خطأ في الاتصال —';
+  }
+}
+
+function kpiBracket(pts) {
+  if (pts >= 950) return 1000;
+  if (pts >= 900) return 850;
+  if (pts >= 800) return 700;
+  if (pts >= 700) return 500;
+  if (pts >= 600) return 300;
+  return 0;
+}
+function bonusBracket(pts) {
+  if (pts >= 950) return 1000;
+  if (pts >= 900) return 500;
+  return 0;
+}
+function levelText(pts) {
+  if (pts >= 950) return {text:'🏆 استثنائي', range:'950 – 1000', color:'#1B5E20', bg:'#E8F5E9'};
+  if (pts >= 900) return {text:'⭐ ممتاز', range:'900 – 949', color:'#2e7d32', bg:'#E8F5E9'};
+  if (pts >= 800) return {text:'👍 جيد جداً', range:'800 – 899', color:'#1565C0', bg:'#EBF3FB'};
+  if (pts >= 700) return {text:'✓ جيد', range:'700 – 799', color:'#E65100', bg:'#FFF8E1'};
+  if (pts >= 600) return {text:'مقبول', range:'600 – 699', color:'#F9A825', bg:'#FFF8E1'};
+  return {text:'⚠️ ضعيف', range:'أقل من 600', color:'#c62828', bg:'#FDECEA'};
+}
+
+async function loadErrors() {
+  const branchKey = document.getElementById('branchSelect').value;
+  const monthKey = document.getElementById('monthSelect').value;
+  document.getElementById('branchTitle').textContent = `${BRANCH_NAMES[branchKey]} — ${MONTH_NAMES[monthKey]}`;
+
+  await loadEmployee();
+
+  try {
+    errors = await sbFetch(`kpi_errors?branch=eq.${encodeURIComponent(branchKey)}&month=eq.${monthKey}&order=date.asc&select=*`) || [];
+  } catch(e) {
+    console.error(e);
+    errors = [];
+  }
+  render();
+}
+
+function render() {
+  const body = document.getElementById('errBody');
+  const empty = document.getElementById('emptyState');
+  const table = document.getElementById('errTable');
+  const topErrorsBox = document.getElementById('topErrors');
+
+  if (errors.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    topErrorsBox.style.display = 'none';
+  } else {
+    table.style.display = 'table';
+    empty.style.display = 'none';
+  }
+
+  body.innerHTML = '';
+  errors.forEach(e => {
+    const tr = document.createElement('tr');
+    const dateStr = new Date(e.date).toLocaleDateString('ar-EG', {day:'2-digit', month:'2-digit', year:'numeric'});
+    tr.innerHTML = `
+      <td style="font-weight:bold;">${dateStr}</td>
+      <td>${e.error_type}</td>
+      <td style="text-align:center;"><span class="deduct-badge">- ${e.deduction} نقطة</span></td>
+      <td style="color:#666; font-size:12px;">${e.note || '—'}</td>
+    `;
+    body.appendChild(tr);
+  });
+
+  const totalDeduct = errors.reduce((s,e) => s + e.deduction, 0);
+  const finalScore = Math.max(0, 1000 - totalDeduct);
+
+  document.getElementById('statCount').textContent = errors.length;
+  document.getElementById('statDeduct').textContent = totalDeduct;
+  document.getElementById('statFinal').textContent = finalScore;
+
+  // Bracket
+  const lvl = levelText(finalScore);
+  const kpi = kpiBracket(finalScore);
+  const bonus = bonusBracket(finalScore);
+  const total = 8000 + kpi + bonus;
+
+  const box = document.getElementById('bracketBox');
+  box.style.background = lvl.bg;
+  document.getElementById('bracketLevel').textContent = lvl.text;
+  document.getElementById('bracketLevel').style.color = lvl.color;
+  document.getElementById('bracketDetail').textContent = `النقاط: ${finalScore} (شريحة ${lvl.range})`;
+  document.getElementById('kpiVal').textContent = kpi.toLocaleString('ar-EG') + ' ج';
+  document.getElementById('bonusVal').textContent = bonus.toLocaleString('ar-EG') + ' ج';
+  document.getElementById('totalVal').textContent = total.toLocaleString('ar-EG') + ' ج';
+
+  // Top errors summary
+  if (errors.length > 0) {
+    const typeCounts = {};
+    errors.forEach(e => { typeCounts[e.error_type] = (typeCounts[e.error_type]||0) + 1; });
+    const top = Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).slice(0,4);
+    topErrorsBox.innerHTML = top.map(([type,count]) =>
+      `<div class="summary-item"><div class="s-num">${count}</div><div class="s-lbl">${type}</div></div>`
+    ).join('');
+    topErrorsBox.style.display = 'grid';
+  }
+}
+
+function downloadReport() {
+  const branchKey = document.getElementById('branchSelect').value;
+  const monthKey = document.getElementById('monthSelect').value;
+  const empName = document.getElementById('empName').textContent;
+  const empCode = document.getElementById('empCodeDisplay').textContent;
+  const empPhone = document.getElementById('empPhoneDisplay').textContent;
+
+  let csv = `تقرير أخطاء KPI - ${BRANCH_NAMES[branchKey]} - ${MONTH_NAMES[monthKey]}\n`;
+  csv += `اسم مدير الفرع,${empName}\n`;
+  csv += `الكود,${empCode}\n`;
+  csv += `التليفون,${empPhone}\n\n`;
+  csv += 'التاريخ,نوع الخطأ,الخصم,ملاحظة\n';
+  errors.forEach(e => {
+    csv += `${e.date},${e.error_type},${e.deduction},"${(e.note||'').replace(/"/g,'""')}"\n`;
+  });
+  const totalDeduct = errors.reduce((s,e) => s + e.deduction, 0);
+  const finalScore = Math.max(0, 1000 - totalDeduct);
+  csv += `\nملخص\n`;
+  csv += `النقاط الأساسية,1000\n`;
+  csv += `إجمالي الخصم,${totalDeduct}\n`;
+  csv += `النقاط النهائية,${finalScore}\n`;
+  csv += `KPI بالجنيه,${kpiBracket(finalScore)}\n`;
+  csv += `البونص,${bonusBracket(finalScore)}\n`;
+  csv += `الراتب الثابت,8000\n`;
+  csv += `إجمالي الراتب,${8000 + kpiBracket(finalScore) + bonusBracket(finalScore)}\n`;
+
+  const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `تقرير_${BRANCH_NAMES[branchKey]}_${monthKey}.csv`;
+  a.click();
+}
+
+loadErrors();
+</script>
+</body>
+</html>
